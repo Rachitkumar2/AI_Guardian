@@ -107,7 +107,7 @@ class AudioDataset(Dataset):
         self.scaler = StandardScaler()
         self.features = self.scaler.fit_transform(self.features)
         
-        print(f"✅ Extracted {len(self.features)} feature vectors of size {self.features.shape[1]}")
+        print(f"Extracted {len(self.features)} feature vectors of size {self.features.shape[1]}")
 
     def __len__(self):
         return len(self.features)
