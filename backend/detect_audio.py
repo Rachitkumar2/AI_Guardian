@@ -15,10 +15,9 @@ if not logger.handlers:
     logger.addHandler(ch)
 logger.setLevel(logging.INFO)
 
-# Config
 MODEL_PATH = os.environ.get("MODEL_PATH", os.path.join(os.getcwd(), "audio_model.pth"))
 SCALER_PATH = os.environ.get("SCALER_PATH", os.path.join(os.getcwd(), "scaler.pkl"))
-MODEL_URL  = os.environ.get("MODEL_URL", None)  # optional: set on Render to download model
+MODEL_URL  = os.environ.get("MODEL_URL", None)  
 
 def download_model(url, dest):
     logger.info(f"Downloading model from {url} -> {dest}")
