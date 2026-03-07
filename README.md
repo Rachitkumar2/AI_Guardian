@@ -245,34 +245,7 @@ curl -X POST -F "file=@audio.wav" http://localhost:5000/api/detect
 
 ---
 
-## 🗓️ Development Roadmap (3 Months)
 
-### Month 1: Foundation & Data (Mar 2026)
-- [x] Core backend API
-- [x] React frontend with upload
-- [x] PyTorch model architecture
-- [ ] Host model on cloud storage
-- [ ] Add model download script
-- [ ] Unit tests & CI/CD pipeline
-- [ ] Docker support
-
-### Month 2: Features & UI (Apr 2026)
-- [ ] Audio waveform visualization
-- [ ] Confidence score bar
-- [ ] Analysis history (local storage)
-- [ ] Batch file upload
-- [ ] Dark mode toggle
-- [ ] PWA support
-
-### Month 3: Polish & Deploy (May 2026)
-- [ ] API documentation (OpenAPI)
-- [ ] Model explainability
-- [ ] Rate limiting
-- [ ] Production deployment (Render/Heroku)
-- [ ] Demo GIF & documentation
-- [ ] v1.0.0 Release
-
----
 
 ## 🤝 Contributing
 
