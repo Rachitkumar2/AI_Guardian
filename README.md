@@ -164,6 +164,133 @@ cd frontend
 npm run dev
 ```
 
+Open http://localhost:5173 in your browser.
+
+---
+
+## 🎓 Training Your Own Model
+
+### Step 1: Get Training Data
+
+**Real Human Voice:**
+- [LibriSpeech](http://www.openslr.org/12/) - Download `dev-clean.tar.gz` (337MB)
+- [Common Voice](https://commonvoice.mozilla.org/en/datasets)
+
+**AI-Generated/Fake Voice:**
+- [ASVspoof 2019](https://www.asvspoof.org/) - Best for deepfake detection
+- [WaveFake](https://zenodo.org/record/5642694) - Direct download
+
+### Step 2: Organize Data
+
+```
+backend/data/
+├── real/
+│   ├── sample1.wav
+│   ├── sample2.flac
+│   └── ...
+└── fake/
+    ├── fake1.wav
+    ├── fake2.mp3
+    └── ...
+```
+
+Recommended: **50-100+ samples per class** for good accuracy.
+
+### Step 3: Train
+
+```bash
+cd backend
+python train_model.py
+```
+
+This will generate:
+- `audio_model.pth` - Trained model weights
+- `scaler.pkl` - Feature normalization scaler
+
+---
+
+## 📡 API Reference
+
+### POST `/api/detect`
+
+Analyze an audio file for deepfake detection.
+
+**Request:**
+```bash
+curl -X POST -F "file=@audio.wav" http://localhost:5000/api/detect
+```
+
+**Response:**
+```json
+{
+  "result": "Real",
+  "confidence": 94.56
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `result` | string | `"Real"` or `"Fake"` |
+| `confidence` | float | Confidence percentage (0-100) |
+
+**Error Response:**
+```json
+{
+  "error": "no_file",
+  "message": "No file uploaded"
+}
+```
+
+---
+
+## 🗓️ Development Roadmap (3 Months)
+
+### Month 1: Foundation & Data (Mar 2026)
+- [x] Core backend API
+- [x] React frontend with upload
+- [x] PyTorch model architecture
+- [ ] Host model on cloud storage
+- [ ] Add model download script
+- [ ] Unit tests & CI/CD pipeline
+- [ ] Docker support
+
+### Month 2: Features & UI (Apr 2026)
+- [ ] Audio waveform visualization
+- [ ] Confidence score bar
+- [ ] Analysis history (local storage)
+- [ ] Batch file upload
+- [ ] Dark mode toggle
+- [ ] PWA support
+
+### Month 3: Polish & Deploy (May 2026)
+- [ ] API documentation (OpenAPI)
+- [ ] Model explainability
+- [ ] Rate limiting
+- [ ] Production deployment (Render/Heroku)
+- [ ] Demo GIF & documentation
+- [ ] v1.0.0 Release
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+---
+
+## 📜 License
+
+**MIT Licensed** - Copyright (c) 2025 Subham Bose
+
+See [LICENSE](LICENSE) for more information.
+
+---
 
 ## 🙏 Acknowledgments
 
@@ -174,4 +301,6 @@ npm run dev
 
 ---
 
-
+<p align="center">
+  Made with ❤️ by <a href="https://github.com/yourusername">Subham Bose</a>
+</p>
