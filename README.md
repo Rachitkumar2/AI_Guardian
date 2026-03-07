@@ -274,8 +274,3 @@ See [LICENSE](LICENSE) for more information.
 - [librosa](https://librosa.org/) for audio feature extraction
 - [PyTorch](https://pytorch.org/) for deep learning framework
 
----
-
-<p align="center">
-  Made with ❤️ by <a href="https://github.com/yourusername">Subham Bose</a>
-</p>
