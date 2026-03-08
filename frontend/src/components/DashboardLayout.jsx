@@ -1,9 +1,54 @@
-import { Outlet, Link, useLocation } from 'react-router-dom';
-import { Shield, LayoutDashboard, History, Settings, HelpCircle, Bell } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
+import { Shield, LayoutDashboard, History, Settings, HelpCircle, Bell, LogOut, ChevronDown } from 'lucide-react';
 
 export default function DashboardLayout() {
   const location = useLocation();
+  const navigate = useNavigate();
   const path = location.pathname;
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const profileRef = useRef(null);
+
+  // Get user info from localStorage
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const stored = localStorage.getItem('user');
+    if (stored) {
+      try { setUser(JSON.parse(stored)); } catch { setUser(null); }
+    }
+  }, []);
+
+  // Close profile menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (profileRef.current && !profileRef.current.contains(e.target)) {
+        setShowProfileMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Get user initials
+  const getInitials = () => {
+    if (!user?.name) return '?';
+    const parts = user.name.trim().split(/\s+/);
+    if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    return parts[0][0].toUpperCase();
+  };
+
+  const handleLogout = async () => {
+    try {
+      await fetch('http://localhost:5000/api/logout', {
+        credentials: 'include',
+      });
+    } catch (err) {
+      console.error('Logout request failed:', err);
+    }
+    localStorage.removeItem('user');
+    navigate('/');
+  };
 
   const navItems = [
     { name: 'Dashboard', path: '/app', icon: LayoutDashboard },
@@ -67,6 +112,17 @@ export default function DashboardLayout() {
               </Link>
             );
           })}
+
+          {/* Logout Button in Sidebar */}
+          <div className="pt-4">
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors w-full"
+            >
+              <LogOut className="w-5 h-5" />
+              Logout
+            </button>
+          </div>
         </nav>
 
         {/* Pro Plan Box */}
@@ -94,10 +150,45 @@ export default function DashboardLayout() {
               <Bell className="w-5 h-5" />
               <span className="absolute top-0 right-0 w-2 h-2 bg-neon-green rounded-full shadow-[0_0_8px_#00FF66]"></span>
             </button>
-            <div className="w-8 h-8 rounded-full bg-[#FFB084] overflow-hidden flex items-center justify-center border-2 border-[#121A15] shadow-sm cursor-pointer">
-              {/* Profile icon placeholder */}
-              <div className="w-4 h-4 bg-white/50 rounded-full mb-3"></div>
-              <div className="w-6 h-6 bg-white/50 rounded-full mt-4 absolute"></div>
+
+            {/* Profile Avatar with Dropdown */}
+            <div className="relative" ref={profileRef}>
+              <button
+                onClick={() => setShowProfileMenu(!showProfileMenu)}
+                className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+              >
+                <div className="w-9 h-9 rounded-full bg-neon-green/20 border-2 border-neon-green/40 flex items-center justify-center cursor-pointer">
+                  <span className="text-neon-green text-sm font-bold">{getInitials()}</span>
+                </div>
+                <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${showProfileMenu ? 'rotate-180' : ''}`} />
+              </button>
+
+              {/* Dropdown Menu */}
+              {showProfileMenu && (
+                <div className="absolute right-0 top-12 w-56 bg-[#121A15] border border-[#1C2A22] rounded-xl shadow-2xl shadow-black/50 overflow-hidden z-50">
+                  <div className="px-4 py-3 border-b border-[#1C2A22]">
+                    <p className="text-sm font-semibold text-white truncate">{user?.name || 'User'}</p>
+                    <p className="text-xs text-gray-400 truncate">{user?.email || ''}</p>
+                  </div>
+                  <div className="p-1.5">
+                    <Link
+                      to="/app/settings"
+                      onClick={() => setShowProfileMenu(false)}
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 hover:text-white hover:bg-[#1C2A22] transition-colors"
+                    >
+                      <Settings className="w-4 h-4" />
+                      Account Settings
+                    </Link>
+                    <button
+                      onClick={handleLogout}
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors w-full"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      Sign Out
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </header>
