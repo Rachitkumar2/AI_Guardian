@@ -11,7 +11,7 @@ export default function Footer() {
             <span className="font-bold text-lg tracking-wide uppercase">AI Guardian</span>
           </Link>
           <p className="text-gray-400 text-sm max-w-xs mb-6">
-            © 2024 AI Guardian Inc. All rights reserved.
+            © 2026 AI Guardian Inc. All rights reserved.
           </p>
         </div>
         
@@ -47,7 +47,7 @@ export default function Footer() {
       </div>
       
       <div className="max-w-7xl mx-auto mt-12 pt-8 border-t border-dark-border flex flex-col md:flex-row items-center justify-between text-xs text-gray-500">
-        <p>© 2024 AI Guardian Inc. All rights reserved.</p>
+        <p>© 2026 AI Guardian Inc. All rights reserved.</p>
         <div className="flex gap-4 mt-4 md:mt-0">
           <a href="#" className="hover:text-neon-green">Terms of Service</a>
           <a href="#" className="hover:text-neon-green">Cookie Policy</a>
