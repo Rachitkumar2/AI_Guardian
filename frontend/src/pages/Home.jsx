@@ -25,14 +25,8 @@ export default function Home() {
               View Demo
             </Link>
           </div>
-          <div className="flex items-center gap-4">
-            <div className="flex -space-x-3">
-              <div className="w-10 h-10 rounded-full border-2 border-[#0E1511] bg-[#FFDEB4]"></div>
-              <div className="w-10 h-10 rounded-full border-2 border-[#0E1511] bg-[#B4E4FF]"></div>
-              <div className="w-10 h-10 rounded-full border-2 border-[#0E1511] bg-[#FFB4E4]"></div>
-            </div>
-            <p className="text-sm text-gray-400">Trusted by <span className="text-white font-semibold">50,000+</span> security professionals</p>
-          </div>
+
+
         </div>
 
         {/* Hero Graphic */}
