@@ -8,6 +8,8 @@ scipy
 requests
 torch
 torchaudio
-
-
-
+pymongo
+dnspython
+PyJWT
+bcrypt
+python-dotenv
