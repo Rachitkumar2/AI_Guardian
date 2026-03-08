@@ -6,11 +6,17 @@ import Library from './pages/Library';
 import Tools from './pages/Tools';
 import DashboardLayout from './components/DashboardLayout';
 import Dashboard from './pages/Dashboard';
+import Login from './pages/Login';
+import Signup from './pages/Signup';
 
 function App() {
   return (
     <div className="min-h-screen bg-[#0E1511] text-white font-sans selection:bg-[#00FF66] selection:text-black flex flex-col">
       <Routes>
+        {/* Isolated full-screen pages */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
+
         {/* Main Website Layout */}
         <Route path="/" element={
           <div className="flex flex-col min-h-screen">
