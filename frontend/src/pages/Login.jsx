@@ -55,6 +55,7 @@ export default function Login() {
       
       if (response.ok) {
         localStorage.setItem('user', JSON.stringify(data.user));
+        window.dispatchEvent(new Event('authChange'));
         setSuccess(true);
         setTimeout(() => navigate('/'), 1500);
       } else {
@@ -86,6 +87,7 @@ export default function Login() {
         
         if (response.ok) {
           localStorage.setItem('user', JSON.stringify(data.user));
+          window.dispatchEvent(new Event('authChange'));
           setSuccess(true);
           setTimeout(() => navigate('/'), 1500);
         } else {

@@ -1,18 +1,39 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Shield, LogOut } from 'lucide-react';
+import { Shield, LogOut, Settings, ChevronDown } from 'lucide-react';
 
 export default function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
   const path = location.pathname;
   const [user, setUser] = useState(null);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const profileRef = useRef(null);
+
+  // Close profile menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (profileRef.current && !profileRef.current.contains(e.target)) {
+        setShowProfileMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   useEffect(() => {
-    const stored = localStorage.getItem('user');
-    if (stored) {
-      try { setUser(JSON.parse(stored)); } catch { setUser(null); }
-    }
+    const handleAuthChange = () => {
+      const stored = localStorage.getItem('user');
+      if (stored) {
+        try { setUser(JSON.parse(stored)); } catch { setUser(null); }
+      } else {
+        setUser(null);
+      }
+    };
+
+    handleAuthChange();
+    window.addEventListener('authChange', handleAuthChange);
+    return () => window.removeEventListener('authChange', handleAuthChange);
   }, []);
 
   const getInitials = () => {
@@ -29,6 +50,7 @@ export default function Navbar() {
       console.error('Logout failed:', err);
     }
     localStorage.removeItem('user');
+    window.dispatchEvent(new Event('authChange'));
     setUser(null);
     navigate('/');
   };
@@ -75,17 +97,45 @@ export default function Navbar() {
             >
               Dashboard
             </Link>
-            <div className="flex items-center gap-3">
-              <Link to="/app" className="w-8 h-8 rounded-full bg-neon-green/20 border-2 border-neon-green/40 flex items-center justify-center cursor-pointer hover:border-neon-green/60 transition-colors">
-                <span className="text-neon-green text-xs font-bold">{getInitials()}</span>
-              </Link>
+            
+            {/* Profile Avatar with Dropdown */}
+            <div className="relative" ref={profileRef}>
               <button
-                onClick={handleLogout}
-                className="text-gray-400 hover:text-red-400 transition-colors"
-                title="Logout"
+                onClick={() => setShowProfileMenu(!showProfileMenu)}
+                className="flex items-center gap-2 hover:opacity-80 transition-opacity"
               >
-                <LogOut className="w-4 h-4" />
+                <div className="w-9 h-9 rounded-full bg-neon-green/20 border-2 border-neon-green/40 flex items-center justify-center cursor-pointer">
+                  <span className="text-neon-green text-sm font-bold">{getInitials()}</span>
+                </div>
+                <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${showProfileMenu ? 'rotate-180' : ''}`} />
               </button>
+
+              {/* Dropdown Menu */}
+              {showProfileMenu && (
+                <div className="absolute right-0 top-12 w-56 bg-[#121A15] border border-[#1C2A22] rounded-xl shadow-2xl shadow-black/50 overflow-hidden z-50">
+                  <div className="px-4 py-3 border-b border-[#1C2A22]">
+                    <p className="text-sm font-semibold text-white truncate">{user?.name || 'User'}</p>
+                    <p className="text-xs text-gray-400 truncate">{user?.email || ''}</p>
+                  </div>
+                  <div className="p-1.5">
+                    <Link
+                      to="/app/settings"
+                      onClick={() => setShowProfileMenu(false)}
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 hover:text-white hover:bg-[#1C2A22] transition-colors"
+                    >
+                      <Settings className="w-4 h-4" />
+                      Account Settings
+                    </Link>
+                    <button
+                      onClick={handleLogout}
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors w-full"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      Sign Out
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </>
         ) : (
