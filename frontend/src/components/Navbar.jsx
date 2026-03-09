@@ -45,7 +45,7 @@ export default function Navbar() {
 
   const handleLogout = async () => {
     try {
-      await fetch('http://localhost:5000/api/logout', { 
+      await fetch('/api/logout', { 
         method: 'POST',
         credentials: 'include' 
       });
@@ -53,6 +53,7 @@ export default function Navbar() {
       console.error('Logout failed:', err);
     }
     localStorage.removeItem('user');
+    localStorage.removeItem('token');
     window.dispatchEvent(new Event('authChange'));
     setUser(null);
     navigate('/');
@@ -122,7 +123,7 @@ export default function Navbar() {
                   </div>
                   <div className="p-1.5">
                     <Link
-                      to="/app/settings"
+                      to="/settings/profile"
                       onClick={() => setShowProfileMenu(false)}
                       className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 hover:text-white hover:bg-[#1C2A22] transition-colors"
                     >

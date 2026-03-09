@@ -8,6 +8,9 @@ import DashboardLayout from './components/DashboardLayout';
 import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
+import SettingsLayout from './components/SettingsLayout';
+import ProfileSettings from './pages/settings/Profile';
+import SecuritySettings from './pages/settings/Security';
 
 function App() {
   return (
@@ -52,6 +55,12 @@ function App() {
         <Route path="/app" element={<DashboardLayout />}>
           <Route index element={<Dashboard />} />
           {/* Add more nested routes here if needed */}
+        </Route>
+
+        {/* Settings Layout */}
+        <Route path="/settings" element={<SettingsLayout />}>
+          <Route path="profile" element={<ProfileSettings />} />
+          <Route path="security" element={<SecuritySettings />} />
         </Route>
       </Routes>
     </div>

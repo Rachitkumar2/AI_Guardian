@@ -42,7 +42,7 @@ export default function Login() {
     setLoading(true);
 
     try {
-      const response = await fetch('http://localhost:5000/api/login', {
+      const response = await fetch('/api/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -55,6 +55,9 @@ export default function Login() {
       
       if (response.ok) {
         localStorage.setItem('user', JSON.stringify(data.user));
+        if (data.token) {
+          localStorage.setItem('token', data.token);
+        }
         window.dispatchEvent(new Event('authChange'));
         setSuccess(true);
         setTimeout(() => navigate('/'), 1500);
@@ -74,7 +77,7 @@ export default function Login() {
       setLoading(true);
       
       try {
-        const response = await fetch('http://localhost:5000/api/google-login', {
+        const response = await fetch('/api/google-login', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -87,6 +90,9 @@ export default function Login() {
         
         if (response.ok) {
           localStorage.setItem('user', JSON.stringify(data.user));
+          if (data.token) {
+            localStorage.setItem('token', data.token);
+          }
           window.dispatchEvent(new Event('authChange'));
           setSuccess(true);
           setTimeout(() => navigate('/'), 1500);

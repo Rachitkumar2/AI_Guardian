@@ -24,7 +24,7 @@ export default function Dashboard() {
 
     try {
       // Assuming the Flask backend runs on port 5000 as per app.py default
-      const res = await fetch('http://localhost:5000/api/detect', {
+      const res = await fetch('/api/detect', {
         method: 'POST',
         credentials: 'include',
         body: formData,

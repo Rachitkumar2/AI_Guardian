@@ -69,8 +69,7 @@ export default function DashboardLayout() {
   ];
 
   const systemItems = [
-    { name: 'Account Settings', path: '/app/settings', icon: Settings },
-    { name: 'Help & Support', path: '/app/help', icon: HelpCircle },
+    { name: 'Account Settings', path: '/settings/profile', icon: Settings },
   ];
 
   return (
@@ -140,19 +139,7 @@ export default function DashboardLayout() {
           )}
         </nav>
 
-        {/* Pro Plan Box */}
-        <div className="px-4 mt-auto">
-          <div className="bg-dark-border/50 border border-[#2A3F33] rounded-xl p-4">
-            <div className="text-neon-green text-[10px] font-bold tracking-wider mb-2 uppercase">Pro Plan</div>
-            <div className="text-xs text-gray-400 mb-3">240/500 minutes used this month.</div>
-            <div className="w-full bg-dark-bg h-1.5 rounded-full mb-4 overflow-hidden">
-              <div className="bg-neon-green h-full w-[48%] shadow-[0_0_10px_#00FF66]"></div>
-            </div>
-            <button className="w-full bg-neon-green text-black text-xs font-bold py-2 rounded-md hover:bg-neon-green-hover transition-colors shadow-[0_0_15px_rgba(0,255,102,0.3)]">
-              Upgrade Now
-            </button>
-          </div>
-        </div>
+
       </aside>
 
       {/* Main Content Area */}
@@ -188,7 +175,7 @@ export default function DashboardLayout() {
                     </div>
                     <div className="p-1.5">
                       <Link
-                        to="/app/settings"
+                        to="/settings/profile"
                         onClick={() => setShowProfileMenu(false)}
                         className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 hover:text-white hover:bg-dark-border transition-colors"
                       >

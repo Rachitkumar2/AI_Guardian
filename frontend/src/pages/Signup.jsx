@@ -47,7 +47,7 @@ export default function Signup() {
     setLoading(true);
 
     try {
-      const response = await fetch('http://localhost:5000/api/signup', {
+      const response = await fetch('/api/signup', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -60,6 +60,9 @@ export default function Signup() {
       
       if (response.ok) {
         localStorage.setItem('user', JSON.stringify(data.user));
+        if (data.token) {
+          localStorage.setItem('token', data.token);
+        }
         window.dispatchEvent(new Event('authChange'));
         setSuccess(true);
         setTimeout(() => navigate('/'), 1500);
@@ -79,7 +82,7 @@ export default function Signup() {
       setLoading(true);
       
       try {
-        const response = await fetch('http://localhost:5000/api/google-login', {
+        const response = await fetch('/api/google-login', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -92,6 +95,9 @@ export default function Signup() {
         
         if (response.ok) {
           localStorage.setItem('user', JSON.stringify(data.user));
+          if (data.token) {
+            localStorage.setItem('token', data.token);
+          }
           window.dispatchEvent(new Event('authChange'));
           setSuccess(true);
           setTimeout(() => navigate('/'), 1500);
