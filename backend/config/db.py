@@ -21,6 +21,8 @@ except ConfigurationError:
     db = client["ai_guardian"]
 
 users_collection = db["users"]
+sessions_collection = db["sessions"]
+login_history_collection = db["login_history"]
 
 # Create unique index on email
 users_collection.create_index("email", unique=True)

@@ -13,7 +13,18 @@ def token_required(f):
     """Decorator that reads JWT from HTTP-only cookie and verifies it."""
     @wraps(f)
     def decorated(*args, **kwargs):
-        token = request.cookies.get("token")
+        # First check Authorization header
+        auth_header = request.headers.get("Authorization")
+        if auth_header and auth_header.startswith("Bearer "):
+            token = auth_header.split(" ")[1]
+            if token == "null" or token == "undefined":
+                token = None
+        else:
+            token = None
+            
+        # Fallback to cookie
+        if not token:
+            token = request.cookies.get("token")
 
         if not token:
             return jsonify({
