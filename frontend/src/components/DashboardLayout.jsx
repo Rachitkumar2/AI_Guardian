@@ -2,6 +2,9 @@ import { useState, useEffect, useRef } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { Shield, LayoutDashboard, History, Settings, HelpCircle, Bell, LogOut, ChevronDown } from 'lucide-react';
 
+// Use environment variable for API base URL, fallback to relative path for production
+const API_BASE = import.meta.env.VITE_API_URL || '';
+
 export default function DashboardLayout() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -48,7 +51,8 @@ export default function DashboardLayout() {
 
   const handleLogout = async () => {
     try {
-      await fetch('http://localhost:5000/api/logout', {
+      await fetch(`${API_BASE}/api/logout`, {
+        method: 'POST',
         credentials: 'include',
       });
     } catch (err) {

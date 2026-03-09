@@ -96,7 +96,20 @@ def login():
     try:
         user = users_collection.find_one({"email": email})
 
-        if user and bcrypt.checkpw(password.encode('utf-8'), user["password"]):
+        if not user:
+            return jsonify({
+                "error": "invalid_credentials",
+                "message": "Invalid email or password"
+            }), 401
+
+        # Check if user has a local password (not OAuth-only)
+        if "password" not in user or not user["password"]:
+            return jsonify({
+                "error": "no_local_password",
+                "message": "Account uses Google sign-in; use OAuth login"
+            }), 401
+
+        if bcrypt.checkpw(password.encode('utf-8'), user["password"]):
             # Generate JWT token
             token = generate_token(user)
 
@@ -149,7 +162,17 @@ def google_login():
         name = None
         
         if access_token:
-            resp = requests.get(f"https://www.googleapis.com/oauth2/v3/userinfo?access_token={access_token}", timeout=5)
+            try:
+                resp = requests.get(
+                    f"https://www.googleapis.com/oauth2/v3/userinfo?access_token={access_token}",
+                    timeout=5
+                )
+            except requests.exceptions.Timeout:
+                return jsonify({"error": "gateway_timeout", "message": "Google API request timed out"}), 504
+            except requests.exceptions.RequestException as req_err:
+                current_app.logger.exception("Google API request failed")
+                return jsonify({"error": "bad_gateway", "message": "Failed to verify Google token"}), 502
+            
             if resp.status_code != 200:
                 return jsonify({"error": "invalid_token", "message": "Invalid Google access token"}), 400
             user_info = resp.json()
@@ -179,6 +202,15 @@ def google_login():
             result = users_collection.insert_one(user_doc)
             user_id = str(result.inserted_id)
         else:
+            # Prevent account takeover: reject Google sign-in for local accounts
+            existing_provider = user.get("auth_provider")
+            if existing_provider != "google":
+                # User has a local (email/password) account - require explicit linking
+                return jsonify({
+                    "error": "account_exists",
+                    "message": "An account with this email already exists. Please log in with your password or link your Google account in settings."
+                }), 409
+            
             user_id = str(user["_id"])
             # Update name if missing
             if "name" not in user or not user["name"]:
@@ -215,9 +247,9 @@ def google_login():
         return jsonify({"error": "server_error", "message": "An internal server error occurred"}), 500
 
 
-@auth_bp.route("/api/logout", methods=["GET"])
+@auth_bp.route("/api/logout", methods=["POST"])
 def logout():
-    """Clear the authentication cookie."""
+    """Clear the authentication cookie. Uses POST to prevent CSRF attacks."""
     response = make_response(jsonify({
         "message": "Logged out successfully"
     }), 200)

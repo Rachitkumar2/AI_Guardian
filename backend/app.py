@@ -1,6 +1,7 @@
 import os
 from flask import Flask, send_from_directory, request, jsonify
 from flask_cors import CORS
+from werkzeug.exceptions import NotFound
 from dotenv import load_dotenv
 
 # Import blueprints
@@ -39,9 +40,14 @@ def home():
 # Catch-all route to serve React app for client-side routing
 @app.errorhandler(404)
 def not_found(e):
-    if request.path.startswith("/api/"):
+    # Return JSON 404 for API and auth routes
+    if request.path.startswith("/api/") or request.path.startswith("/auth/"):
         return jsonify({"error": "not_found", "message": "API endpoint not found"}), 404
-    return send_from_directory(app.static_folder, 'index.html')
+    # Try to serve index.html for client-side routing, fallback to JSON 404
+    try:
+        return send_from_directory(app.static_folder, 'index.html')
+    except (NotFound, TypeError):
+        return jsonify({"error": "not_found", "message": "Resource not found"}), 404
 
 
 if __name__ == "__main__":
