@@ -202,14 +202,20 @@ def google_login():
             result = users_collection.insert_one(user_doc)
             user_id = str(result.inserted_id)
         else:
-            # Prevent account takeover: reject Google sign-in for local accounts
+            # Check if this user was originally a local account
             existing_provider = user.get("auth_provider")
-            if existing_provider != "google":
-                # User has a local (email/password) account - require explicit linking
-                return jsonify({
-                    "error": "account_exists",
-                    "message": "An account with this email already exists. Please log in with your password or link your Google account in settings."
-                }), 409
+            
+            # If they don't have a provider but have a password, they are local
+            # or if they explicitly have "local" provider
+            is_local = (existing_provider != "google" and "password" in user) or existing_provider == "local"
+            
+            # If so, seamlessly link their Google account
+            if is_local:
+                # Add Google auth provider info but keep their local password intact
+                users_collection.update_one(
+                    {"_id": user["_id"]}, 
+                    {"$set": {"auth_provider": "google"}}
+                )
             
             user_id = str(user["_id"])
             # Update name if missing
