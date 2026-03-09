@@ -7,6 +7,8 @@ from dotenv import load_dotenv
 # Import blueprints
 from auth.auth_routes import auth_bp
 from routes.detect_routes import detect_bp
+from routes.profile_routes import profile_bp
+from routes.security_routes import security_bp
 
 # Load environment variables
 load_dotenv()
@@ -28,6 +30,8 @@ os.makedirs("uploads", exist_ok=True)
 # Register Blueprints
 app.register_blueprint(auth_bp)
 app.register_blueprint(detect_bp)
+app.register_blueprint(profile_bp)
+app.register_blueprint(security_bp)
 
 
 # ── Routes ──────────────────────────────────────────────────────────

@@ -15,4 +15,6 @@ def generate_token(user):
         "iat": datetime.now(timezone.utc),
         "exp": datetime.now(timezone.utc) + timedelta(hours=24)
     }
+    if "session_id" in user:
+        payload["session_id"] = user["session_id"]
     return jwt.encode(payload, JWT_SECRET, algorithm="HS256")

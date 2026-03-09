@@ -7,6 +7,8 @@ from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
 from auth.jwt_utils import generate_token
 from config.db import users_collection
+from models.session_model import create_session, log_login_attempt
+from user_agents import parse
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -48,6 +50,7 @@ def signup():
         # Set JWT in HTTP-only cookie and return user info
         response = make_response(jsonify({
             "message": "User created successfully",
+            "token": token,
             "user": {
                 "id": str(result.inserted_id),
                 "name": name,
@@ -97,6 +100,7 @@ def login():
         user = users_collection.find_one({"email": email})
 
         if not user:
+            log_login_attempt(email, request.headers.get("X-Forwarded-For", request.remote_addr), request.headers.get("User-Agent", ""), "Unknown", "Failed")
             return jsonify({
                 "error": "invalid_credentials",
                 "message": "Invalid email or password"
@@ -110,11 +114,23 @@ def login():
             }), 401
 
         if bcrypt.checkpw(password.encode('utf-8'), user["password"]):
-            # Generate JWT token
-            token = generate_token(user)
+            # Record Session
+            user_agent = parse(request.headers.get("User-Agent", ""))
+            browser = f"{user_agent.browser.family} {user_agent.browser.version_string}"
+            device = f"{user_agent.os.family} {user_agent.os.version_string}"
+            ip = request.headers.get("X-Forwarded-For", request.remote_addr)
+            
+            session_id = create_session(user["_id"], ip, browser, device)
+            log_login_attempt(user["_id"], ip, browser, device, "Success")
+            
+            # Generate JWT token with session_id
+            user_payload = dict(user)
+            user_payload["session_id"] = session_id
+            token = generate_token(user_payload)
 
             response = make_response(jsonify({
                 "message": "Login successful",
+                "token": token,
                 "user": {
                     "id": str(user["_id"]),
                     "name": user.get("name", ""),
@@ -132,6 +148,7 @@ def login():
             )
             return response
         else:
+            log_login_attempt(user["_id"], request.headers.get("X-Forwarded-For", request.remote_addr), request.headers.get("User-Agent", ""), "Unknown", "Failed")
             return jsonify({
                 "error": "invalid_credentials",
                 "message": "Invalid email or password"
@@ -224,11 +241,22 @@ def google_login():
             else:
                 name = user.get("name")
             
+        # Record Session
+        user_agent = parse(request.headers.get("User-Agent", ""))
+        browser = f"{user_agent.browser.family} {user_agent.browser.version_string}"
+        device = f"{user_agent.os.family} {user_agent.os.version_string}"
+        ip = request.headers.get("X-Forwarded-For", request.remote_addr)
+        
+        session_id = create_session(user_id, ip, browser, device)
+        log_login_attempt(user_id, ip, browser, device, "Success")
+
         # Generate JWT token
-        jwt_token = generate_token({"_id": user_id, "email": email})
+        user_payload = {"_id": user_id, "email": email, "session_id": session_id}
+        jwt_token = generate_token(user_payload)
 
         response = make_response(jsonify({
             "message": "Login successful",
+            "token": jwt_token,
             "user": {
                 "id": user_id,
                 "name": name,
