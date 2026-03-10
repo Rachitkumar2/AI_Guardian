@@ -5,7 +5,7 @@ export default function Home() {
   return (
     <div className="w-full">
       {/* Hero Section */}
-      <section className="max-w-7xl mx-auto px-8 py-20 lg:py-32 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+      <section className="max-w-7xl mx-auto px-8 py-12 lg:py-20 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
         <div>
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#151E18] border border-[#1C2A22] text-neon-green text-xs font-bold tracking-wider mb-6">
             <span className="w-2 h-2 rounded-full bg-neon-green animate-pulse"></span>
@@ -20,9 +20,6 @@ export default function Home() {
           <div className="flex flex-col sm:flex-row items-center gap-4 mb-10">
             <Link to="/app" className="w-full sm:w-auto flex items-center justify-center gap-2 bg-neon-green text-black px-8 py-4 rounded-xl font-bold hover:bg-neon-green-hover transition-all neon-glow">
               Get Started Free <ArrowRight className="w-5 h-5" />
-            </Link>
-            <Link to="/app" className="w-full sm:w-auto flex items-center justify-center gap-2 bg-transparent border border-[#1C2A22] text-white px-8 py-4 rounded-xl font-bold hover:bg-[#151E18] transition-all">
-              View Demo
             </Link>
           </div>
 
@@ -172,17 +169,14 @@ export default function Home() {
       {/* CTA Section */}
       <section className="max-w-7xl mx-auto px-8 py-24">
         <div className="bg-neon-green rounded-3xl p-12 lg:p-20 text-center text-black shadow-[0_0_50px_rgba(0,255,102,0.2)]">
-          <h2 className="text-4xl lg:text-5xl font-black tracking-tight mb-6">Ready to secure your vocal<br/>identity?</h2>
+          <h2 className="text-4xl lg:text-5xl font-black tracking-tight mb-6">Ready to detect deepfakes?</h2>
           <p className="text-black/80 font-medium max-w-2xl mx-auto mb-10 text-lg">
-            Join thousands of companies protecting their operations against the next generation of social engineering attacks.
+            Start analyzing audio files now and protect yourself from AI-generated voice clones.
           </p>
-          <div className="flex flex-col sm:flex-row justify-center gap-4">
+          <div className="flex justify-center">
             <Link to="/app" className="bg-black text-white px-8 py-4 rounded-xl font-bold hover:bg-gray-900 transition-colors inline-block">
-              Start Free Trial
+              Try It Now
             </Link>
-            <button className="bg-transparent border-2 border-black text-black px-8 py-4 rounded-xl font-bold hover:bg-black/5 transition-colors">
-              Contact Sales
-            </button>
           </div>
         </div>
       </section>
