@@ -114,25 +114,6 @@ export default function Library() {
         </div>
       </section>
 
-      {/* Newsletter Section */}
-      <section className="py-16 border-t border-dark-border bg-[#121A15]">
-        <div className="max-w-7xl mx-auto px-8 flex flex-col md:flex-row items-center justify-between gap-8">
-          <div>
-            <h2 className="text-2xl font-bold mb-2">Stay Protected</h2>
-            <p className="text-gray-400 text-sm">Join 50,000+ others receiving our weekly AI safety brief.</p>
-          </div>
-          <div className="flex w-full md:w-auto gap-3">
-            <input 
-              type="email" 
-              placeholder="Enter your email" 
-              className="bg-[#0E1511] border border-[#1C2A22] text-white rounded-lg px-4 py-3 min-w-[300px] focus:outline-none focus:border-neon-green/50"
-            />
-            <button className="bg-neon-green text-black px-6 py-3 rounded-lg font-bold hover:bg-neon-green-hover transition-colors whitespace-nowrap">
-              Subscribe
-            </button>
-          </div>
-        </div>
-      </section>
     </div>
   );
 }

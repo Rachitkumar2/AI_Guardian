@@ -11,7 +11,7 @@ export default function Footer() {
             <span className="font-bold text-lg tracking-wide uppercase">AI Guardian</span>
           </Link>
           <p className="text-gray-400 text-sm mb-4">
-            Deepfake audio detection powered by machine learning.
+            Deepfake audio detection 
           </p>
           <div className="flex gap-3">
             <a href="#" className="w-8 h-8 rounded-lg bg-[#1C2A22] flex items-center justify-center hover:bg-neon-green/20 transition-colors">

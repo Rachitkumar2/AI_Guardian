@@ -6,29 +6,29 @@ export default function Tools() {
       title: 'Real-time Stream Monitor',
       icon: <Radio className="w-5 h-5 text-neon-green" />,
       description: 'Monitor live audio streams for synthetic voice patterns and deepfake injection attacks in real-time with sub-50ms latency.',
-      tag: 'LIVE',
-      gradient: 'from-[#1A251D] to-[#0E1511]'
+      tag: null,
+      image: '/images/tools/stream_monitor.png'
     },
     {
       title: 'Batch File Analyzer',
       icon: <Database className="w-5 h-5 text-neon-green" />,
       description: 'Upload and analyze thousands of audio files simultaneously. Generates comprehensive forensic reports for legal and compliance needs.',
       tag: null,
-      gradient: 'from-[#0E1511] to-[#1C2A22]'
+      image: '/images/tools/batch_analyzer.png'
     },
     {
       title: 'API Playground',
       icon: <Terminal className="w-5 h-5 text-neon-green" />,
       description: 'Test our detection algorithms with custom parameters in a sandboxed environment. Integrate directly with your CI/CD pipelines.',
       tag: null,
-      gradient: 'from-[#151E18] to-[#0A0F0C]'
+      image: '/images/tools/api_playground.png'
     },
     {
       title: 'Voice Authenticator',
       icon: <Fingerprint className="w-5 h-5 text-neon-green" />,
       description: 'Verify identity using secure biometric voice authentication protocols. Zero-knowledge proof verification for sensitive transactions.',
       tag: null,
-      gradient: 'from-[#1C2A22] to-[#121A15]'
+      image: '/images/tools/voice_authenticator.png'
     }
   ];
 
@@ -49,32 +49,18 @@ export default function Tools() {
                 Secure your audio streams and digital assets with our suite of advanced AI guardian utilities. Built for enterprise-grade authentication.
               </p>
             </div>
-            {/* Search Bar matching the mockup location */}
-            <div className="relative w-full md:w-80 shrink-0">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Search className="h-4 w-4 text-gray-400" />
-              </div>
-              <input
-                type="text"
-                className="w-full bg-[#151E18] border border-[#1C2A22] text-white rounded-lg pl-10 pr-4 py-2 text-sm focus:outline-none focus:border-neon-green/50 transition-colors"
-                placeholder="Search utilities..."
-              />
-            </div>
           </div>
 
           {/* Tools Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {toolsList.map((tool, idx) => (
-              <div key={idx} className="glass-panel overflow-hidden group hover:border-neon-green/30 transition-all flex flex-col pt-0">
+              <div key={idx} className="glass-panel overflow-hidden group hover:border-neon-green/30 transition-all flex flex-col p-0">
                 
-                {/* Image Placeholder */}
-                <div className={`h-40 w-full bg-gradient-to-b ${tool.gradient} relative overflow-hidden flex items-center justify-center border-b border-[#1C2A22]`}>
-                  <div className="absolute inset-0 opacity-10 flex text-neon-green justify-center items-center">
-                     {/* Fake wave background */}
-                     <Activity className="w-full h-full scale-150 opacity-20" strokeWidth={0.5} />
-                  </div>
+                {/* Tool Image */}
+                <div className="h-40 w-full relative overflow-hidden flex items-center justify-center border-b border-[#1C2A22] bg-[#0E1511]">
+                  <img src={tool.image} alt={tool.title} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500" />
                   {tool.tag && (
-                    <div className="absolute top-4 right-4 bg-neon-green text-black text-[10px] font-bold px-2 py-1 rounded tracking-wider">
+                    <div className="absolute top-4 right-4 bg-neon-green text-black text-[10px] font-bold px-2 py-1 rounded tracking-wider shadow-[0_0_10px_rgba(0,255,102,0.3)]">
                       {tool.tag}
                     </div>
                   )}

@@ -19,7 +19,7 @@ export default function Home() {
           </p>
           <div className="flex flex-col sm:flex-row items-center gap-4 mb-10">
             <Link to="/app" className="w-full sm:w-auto flex items-center justify-center gap-2 bg-neon-green text-black px-8 py-4 rounded-xl font-bold hover:bg-neon-green-hover transition-all neon-glow">
-              Get Started Free <ArrowRight className="w-5 h-5" />
+              Get Started <ArrowRight className="w-5 h-5" />
             </Link>
           </div>
 
