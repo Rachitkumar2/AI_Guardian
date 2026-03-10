@@ -63,7 +63,7 @@ export default function ProfileSettings() {
   if (loading) return null;
 
   return (
-    <div className="space-y-6 animate-slide-down max-w-4xl">
+    <div className="space-y-6 max-w-4xl">
       
       {/* Profile Information Card */}
       <div className="bg-[#151e18] border border-[#1c2a22] rounded-xl overflow-hidden shadow-sm">

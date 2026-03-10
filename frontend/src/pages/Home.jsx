@@ -49,7 +49,7 @@ export default function Home() {
                 </div>
                 <div>
                   <div className="text-[10px] text-neon-green tracking-wider font-bold mb-1 uppercase">Scanning Audio</div>
-                  <div className="font-semibold text-sm">Probabilistic Match: 98.4% synthetic</div>
+                  <div className="font-semibold text-sm">Acoustic Score: 98.4% synthetic</div>
                 </div>
               </div>
             </div>
@@ -66,7 +66,7 @@ export default function Home() {
       <section className="py-24 bg-[#121A15] border-y border-dark-border">
         <div className="max-w-7xl mx-auto px-8">
           <div className="text-center max-w-2xl mx-auto mb-16">
-            <h2 className="text-3xl lg:text-4xl font-bold mb-4">How VoiceShield Detects Fakes</h2>
+            <h2 className="text-3xl lg:text-4xl font-bold mb-4">How AI Guardian Detects Fakes</h2>
             <p className="text-gray-400">Our proprietary neural networks look beyond the audible sound to find the microscopic digital signatures left by AI generative models.</p>
           </div>
 
@@ -84,7 +84,7 @@ export default function Home() {
                 <BrainCircuit className="w-6 h-6 text-neon-green" />
               </div>
               <h3 className="text-xl font-bold mb-3">2. AI Analysis</h3>
-              <p className="text-gray-400 text-sm leading-relaxed">Our models analyze over 1,400 biometric markers to differentiate human vocal cords from algorithmic generation.</p>
+              <p className="text-gray-400 text-sm leading-relaxed">Our deep neural network analyzes over 184 acoustic features to differentiate human vocal patterns from AI-generated speech.</p>
             </div>
 
             <div className="glass-panel p-8 hover:border-dark-border/80 transition-all group">
@@ -120,7 +120,7 @@ export default function Home() {
                    <div className="h-1 w-full bg-[#151E18] rounded-full overflow-hidden">
                      <div className="h-full bg-neon-green w-[84%]"></div>
                    </div>
-                   <div className="text-xs text-right mt-2 font-mono text-gray-400">AudioHz: 84% MATCH</div>
+                   <div className="text-xs text-right mt-2 font-mono text-gray-400">Acoustic Score: 84% analyzed</div>
                  </div>
                </div>
             </div>

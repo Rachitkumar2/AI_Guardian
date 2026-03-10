@@ -217,23 +217,23 @@ export default function Signup() {
       </div>
 
       {/* Right Panel - Signup Form */}
-      <div className="w-full lg:w-1/2 flex flex-col">
+      <div className="w-full lg:w-1/2 flex flex-col min-h-screen lg:min-h-0">
         {/* Mobile-only logo */}
-        <div className="lg:hidden p-8">
+        <div className="lg:hidden p-5 sm:p-8">
           <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
             <Shield className="w-6 h-6 text-neon-green" fill="#00FF66" strokeWidth={1} />
             <span className="font-bold text-lg tracking-wide uppercase">AI Guardian</span>
           </Link>
         </div>
 
-        <div className="flex-1 flex items-center justify-center p-8 relative overflow-hidden">
+        <div className="flex-1 flex items-center justify-center p-5 sm:p-8 relative overflow-y-auto">
           {/* Subtle background glow */}
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-neon-green/5 rounded-full blur-[120px] pointer-events-none"></div>
 
           <div className="w-full max-w-md relative z-10">
             <div>
-              <div className="text-center mb-10">
-                <h1 className="text-3xl font-bold mb-3 text-white">Create an Account</h1>
+              <div className="text-center mb-8 sm:mb-10">
+                <h1 className="text-2xl sm:text-3xl font-bold mb-3 text-white">Create an Account</h1>
                 <p className="text-gray-400 text-sm">Start detecting deepfake audio today</p>
               </div>
             </div>
@@ -257,7 +257,7 @@ export default function Signup() {
                     required
                     value={name}
                     onChange={(e) => { setName(e.target.value); setErrors(prev => ({ ...prev, name: '' })); }}
-                    className={`w-full bg-[#121A15] border ${errors.name ? 'border-red-500/50' : 'border-[#1C2A22]'} text-white rounded-xl pl-12 pr-4 py-4 focus:outline-none focus:border-neon-green/50 focus:shadow-[0_0_0_3px_rgba(0,255,102,0.08)] transition-all`}
+                    className={`w-full bg-[#121A15] border ${errors.name ? 'border-red-500/50' : 'border-[#1C2A22]'} text-white rounded-xl pl-12 pr-4 py-3.5 sm:py-4 focus:outline-none focus:border-neon-green/50 focus:shadow-[0_0_0_3px_rgba(0,255,102,0.08)] transition-all`}
                     placeholder="Jane Doe"
                   />
                 </div>
@@ -275,7 +275,7 @@ export default function Signup() {
                     required
                     value={email}
                     onChange={(e) => { setEmail(e.target.value); setErrors(prev => ({ ...prev, email: '' })); }}
-                    className={`w-full bg-[#121A15] border ${errors.email ? 'border-red-500/50' : 'border-[#1C2A22]'} text-white rounded-xl pl-12 pr-4 py-4 focus:outline-none focus:border-neon-green/50 focus:shadow-[0_0_0_3px_rgba(0,255,102,0.08)] transition-all`}
+                    className={`w-full bg-[#121A15] border ${errors.email ? 'border-red-500/50' : 'border-[#1C2A22]'} text-white rounded-xl pl-12 pr-4 py-3.5 sm:py-4 focus:outline-none focus:border-neon-green/50 focus:shadow-[0_0_0_3px_rgba(0,255,102,0.08)] transition-all`}
                     placeholder="you@company.com"
                   />
                 </div>
@@ -293,7 +293,7 @@ export default function Signup() {
                     required
                     value={password}
                     onChange={(e) => { setPassword(e.target.value); setErrors(prev => ({ ...prev, password: '' })); }}
-                    className={`w-full bg-[#121A15] border ${errors.password ? 'border-red-500/50' : 'border-[#1C2A22]'} text-white rounded-xl pl-12 pr-12 py-4 focus:outline-none focus:border-neon-green/50 focus:shadow-[0_0_0_3px_rgba(0,255,102,0.08)] transition-all`}
+                    className={`w-full bg-[#121A15] border ${errors.password ? 'border-red-500/50' : 'border-[#1C2A22]'} text-white rounded-xl pl-12 pr-12 py-3.5 sm:py-4 focus:outline-none focus:border-neon-green/50 focus:shadow-[0_0_0_3px_rgba(0,255,102,0.08)] transition-all`}
                     placeholder="••••••••"
                   />
                   <button
@@ -331,7 +331,7 @@ export default function Signup() {
                 <button
                   type="submit"
                   disabled={loading || success}
-                  className="w-full bg-neon-green text-black py-4 rounded-xl font-bold text-lg hover:bg-neon-green-hover transition-all shadow-[0_0_20px_rgba(0,255,102,0.2)] hover:shadow-[0_0_30px_rgba(0,255,102,0.4)] flex justify-center items-center gap-2 disabled:opacity-70 mt-2"
+                  className="w-full bg-neon-green text-black py-3.5 sm:py-4 rounded-xl font-bold text-base sm:text-lg hover:bg-neon-green-hover transition-all shadow-[0_0_20px_rgba(0,255,102,0.2)] hover:shadow-[0_0_30px_rgba(0,255,102,0.4)] flex justify-center items-center gap-2 disabled:opacity-70 mt-2"
                 >
                   {loading ? 'Creating...' : 'Create Account'} <ArrowRight className="w-5 h-5" />
                 </button>

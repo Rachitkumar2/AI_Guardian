@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { Upload, Link as LinkIcon, AlertTriangle, CheckCircle2, Activity, Loader2, History } from 'lucide-react';
+import { Upload, Link as LinkIcon, AlertTriangle, CheckCircle2, Activity, Loader2, History, ShieldCheck, ShieldAlert } from 'lucide-react';
 import { useDropzone } from 'react-dropzone';
 
 export default function Dashboard() {
@@ -7,13 +7,6 @@ export default function Dashboard() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [currentResult, setCurrentResult] = useState(null);
   const [urlInput, setUrlInput] = useState('');
-
-  const anomalies = [
-    { name: 'SPECTRAL JITTER', match: currentResult ? (currentResult.isFake ? '92%' : '12%') : '0%' },
-    { name: 'PITCH VARIANCE CONSISTENCY', match: currentResult ? (currentResult.isFake ? '64%' : '5%') : '0%' },
-    { name: 'PHONEME TRANSITIONS', match: currentResult ? (currentResult.isFake ? '81%' : '18%') : '0%' },
-    { name: 'BACKGROUND NOISE COHESION', match: currentResult ? (currentResult.isFake ? '15%' : '88%') : '0%' }
-  ];
 
   const handleFileUpload = async (file) => {
     setIsAnalyzing(true);
@@ -23,7 +16,6 @@ export default function Dashboard() {
     formData.append('file', file);
 
     try {
-      // Assuming the Flask backend runs on port 5000 as per app.py default
       const res = await fetch('/api/detect', {
         method: 'POST',
         credentials: 'include',
@@ -36,7 +28,6 @@ export default function Dashboard() {
         throw new Error(data.message || data.error || 'Failed to analyze audio');
       }
 
-      // Try to handle both cases format: 0.94 vs 94.9
       const confidenceRaw = data.confidence || 0;
       const confidencePercent = Math.round(confidenceRaw <= 1 ? confidenceRaw * 100 : confidenceRaw);
       const isFake = data.result?.toLowerCase() === 'fake';
@@ -48,6 +39,8 @@ export default function Dashboard() {
         status: isFake ? 'FAKE' : 'REAL',
         isFake: isFake,
         confidence: confidencePercent,
+        confidenceLevel: data.confidence_level || 'Unknown',
+        signals: data.signals || [],
       };
 
       setCurrentResult(newResult);
@@ -87,7 +80,48 @@ export default function Dashboard() {
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = currentResult 
     ? circumference - (currentResult.confidence / 100) * circumference 
-    : circumference; // 0% filled if no result
+    : circumference;
+
+  // Confidence level badge colors
+  const confidenceLevelConfig = {
+    High: { bg: 'bg-neon-green/20', text: 'text-neon-green', border: 'border-neon-green/30' },
+    Moderate: { bg: 'bg-amber-500/20', text: 'text-amber-400', border: 'border-amber-500/30' },
+    Low: { bg: 'bg-red-500/20', text: 'text-red-400', border: 'border-red-500/30' },
+    Unknown: { bg: 'bg-gray-500/20', text: 'text-gray-400', border: 'border-gray-500/30' },
+  };
+
+  const levelStyle = confidenceLevelConfig[currentResult?.confidenceLevel] || confidenceLevelConfig.Unknown;
+
+  // Fallback signals when no result yet
+  const displaySignals = currentResult?.signals?.length > 0 
+    ? currentResult.signals 
+    : [
+        { name: 'MFCC Spectral Consistency', score: 0 },
+        { name: 'Spectrogram Artifact Score', score: 0 },
+        { name: 'Prosody Pattern Score', score: 0 },
+        { name: 'Signal Consistency', score: 0 },
+      ];
+
+  // Signal bar color based on score and context
+  const getSignalColor = (score, signalName) => {
+    if (!currentResult) return 'bg-gray-600';
+    
+    // For "Signal Consistency" and "MFCC Spectral Consistency":
+    // high score = good (green), low score = bad (red)
+    const isPositiveMetric = signalName.includes('Consistency');
+    
+    if (isPositiveMetric) {
+      if (score >= 70) return 'bg-neon-green shadow-[0_0_8px_#00FF66]';
+      if (score >= 40) return 'bg-amber-400 shadow-[0_0_8px_#f59e0b]';
+      return 'bg-red-500 shadow-[0_0_8px_#ef4444]';
+    } else {
+      // For "Artifact Score" and "Prosody Pattern Score":
+      // high score = suspicious (red), low score = clean (green)
+      if (score >= 70) return 'bg-red-500 shadow-[0_0_8px_#ef4444]';
+      if (score >= 40) return 'bg-amber-400 shadow-[0_0_8px_#f59e0b]';
+      return 'bg-neon-green shadow-[0_0_8px_#00FF66]';
+    }
+  };
 
   return (
     <div className="flex flex-col xl:flex-row gap-8 w-full max-w-7xl mx-auto">
@@ -168,7 +202,7 @@ export default function Dashboard() {
             
             {/* Donut Chart */}
             <div className="glass-panel p-6 flex flex-col items-center justify-center border-[#1C2A22]">
-              <div className="relative w-40 h-40 flex items-center justify-center mb-6">
+              <div className="relative w-40 h-40 flex items-center justify-center mb-4">
                 <svg className="w-full h-full -rotate-90 transform" viewBox="0 0 100 100">
                   <circle cx="50" cy="50" r="45" fill="none" stroke="#1C2A22" strokeWidth="10" />
                   <circle 
@@ -186,6 +220,15 @@ export default function Dashboard() {
                   <span className="text-[10px] text-gray-400 font-bold tracking-widest uppercase">Confidence</span>
                 </div>
               </div>
+
+              {/* Confidence Level Badge */}
+              {currentResult && (
+                <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border mb-3 ${levelStyle.bg} ${levelStyle.text} ${levelStyle.border}`}>
+                  {currentResult.confidenceLevel === 'High' ? <ShieldCheck className="w-3.5 h-3.5" /> : <ShieldAlert className="w-3.5 h-3.5" />}
+                  {currentResult.confidenceLevel} Confidence
+                </div>
+              )}
+
               <div className="text-center">
                 <div className="text-sm text-gray-400 mb-1">Likelihood of Synthesis</div>
                 <div className={`font-black uppercase text-lg tracking-widest ${currentResult ? (currentResult.isFake ? 'text-red-500 shadow-red-500/50' : 'text-neon-green neon-text') : 'text-gray-500'}`}>
@@ -194,21 +237,27 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Breakdown Bars */}
+            {/* Detection Signals Breakdown */}
             <div className="glass-panel p-6 md:col-span-2 border-[#1C2A22] space-y-6 flex flex-col justify-center">
-              <h3 className="font-bold flex items-center gap-2 mb-2"><Activity className="w-4 h-4 text-neon-green" /> Acoustic Anomalies Breakdown</h3>
+              <h3 className="font-bold flex items-center gap-2 mb-2"><Activity className="w-4 h-4 text-neon-green" /> Detection Signals Breakdown</h3>
               
               <div className="space-y-5">
-                {anomalies.map((anomaly, i) => (
+                {displaySignals.map((signal, i) => (
                   <div key={i}>
                     <div className="flex justify-between text-xs font-bold mb-2">
-                      <span className="text-gray-300 tracking-wider">{anomaly.name}</span>
-                      <span className="text-neon-green">{anomaly.match} Match</span>
+                      <span className="text-gray-300 tracking-wider uppercase">{signal.name}</span>
+                      <span className={currentResult ? (
+                        signal.name.includes('Consistency') 
+                          ? (signal.score >= 70 ? 'text-neon-green' : signal.score >= 40 ? 'text-amber-400' : 'text-red-400')
+                          : (signal.score >= 70 ? 'text-red-400' : signal.score >= 40 ? 'text-amber-400' : 'text-neon-green')
+                      ) : 'text-gray-500'}>
+                        {signal.score}% Feature Score
+                      </span>
                     </div>
                     <div className="h-1.5 w-full bg-[#1A251D] rounded-full overflow-hidden">
                       <div 
-                        className="h-full bg-neon-green shadow-[0_0_8px_#00FF66] transition-all duration-1000 ease-out" 
-                        style={{ width: anomaly.match }}
+                        className={`h-full ${getSignalColor(signal.score, signal.name)} transition-all duration-1000 ease-out rounded-full`} 
+                        style={{ width: `${signal.score}%` }}
                       ></div>
                     </div>
                   </div>
@@ -256,7 +305,7 @@ export default function Dashboard() {
                 <div className="flex-1 min-w-0">
                   <div className="font-semibold text-sm truncate mb-1">{res.filename}</div>
                   <div className="text-xs text-gray-500 flex items-center gap-1.5">
-                    {res.time} &bull; <span className={res.isFake ? 'text-gray-400' : 'text-gray-400'}>{res.result}</span>
+                    {res.time} &bull; <span className="text-gray-400">{res.result}</span>
                   </div>
                 </div>
                 <div className={`text-[10px] font-bold px-2 py-1 rounded shrink-0 ${res.isFake ? 'bg-red-500/20 text-red-500 border border-red-500/30' : 'bg-neon-green/20 text-neon-green border border-neon-green/30'}`}>

@@ -60,7 +60,6 @@ export default function ChangePasswordForm() {
           <Key className="w-6 h-6 text-neon-green" />
           <h2 className="text-xl font-bold">Change Password</h2>
         </div>
-        <div className="text-xs text-gray-500">Security Requirement &gt;= 8 chars</div>
       </div>
 
       {message && <p className="mb-4 text-sm text-neon-green font-medium bg-neon-green/10 p-3 rounded-lg border border-neon-green/30">{message}</p>}

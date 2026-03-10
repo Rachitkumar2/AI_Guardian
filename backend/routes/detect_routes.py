@@ -35,7 +35,9 @@ def detect():
         prediction = predict_audio(file_path)
         return jsonify({
             "result": prediction["result"],
-            "confidence": prediction["confidence"]
+            "confidence": prediction["confidence"],
+            "confidence_level": prediction.get("confidence_level", "Unknown"),
+            "signals": prediction.get("signals", []),
         }), 200
     except Exception as e:
         current_app.logger.exception("Error during detection")

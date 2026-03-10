@@ -148,10 +148,6 @@ export default function DashboardLayout() {
         <header className="h-16 flex items-center justify-between px-8 border-b border-dark-border shrink-0 bg-dark-bg">
           <h1 className="font-semibold text-lg">New Analysis</h1>
           <div className="flex items-center gap-4">
-            <button className="text-gray-400 hover:text-white transition-colors relative">
-              <Bell className="w-5 h-5" />
-              <span className="absolute top-0 right-0 w-2 h-2 bg-neon-green rounded-full shadow-[0_0_8px_#00FF66]"></span>
-            </button>
 
             {/* Profile Avatar with Dropdown */}
             {user ? (
