@@ -4,14 +4,14 @@ import { Link } from 'react-router-dom';
 export default function Footer() {
   return (
     <footer className="bg-[#121A15] border-t border-dark-border py-12 px-8 mt-20">
-      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8">
         <div className="md:col-span-1">
           <Link to="/" className="flex items-center gap-2 mb-4 hover:opacity-80 transition-opacity">
             <Shield className="w-6 h-6 text-neon-green" fill="#00FF66" strokeWidth={1} />
             <span className="font-bold text-lg tracking-wide uppercase">AI Guardian</span>
           </Link>
           <p className="text-gray-400 text-sm mb-4">
-            Deepfake audio detection 
+            Deepfake audio detection powered by machine learning.
           </p>
           <div className="flex gap-3">
             <a href="#" className="w-8 h-8 rounded-lg bg-[#1C2A22] flex items-center justify-center hover:bg-neon-green/20 transition-colors">
@@ -45,10 +45,20 @@ export default function Footer() {
             <li><span className="hover:text-neon-green transition-colors cursor-default">Detection History</span></li>
           </ul>
         </div>
+
+        <div>
+          <h4 className="font-semibold mb-4 text-white">About Project</h4>
+          <ul className="space-y-3 text-sm text-gray-400">
+            <li><span className="hover:text-neon-green transition-colors cursor-default">College Project</span></li>
+            <li><span className="hover:text-neon-green transition-colors cursor-default">Machine Learning</span></li>
+            <li><span className="hover:text-neon-green transition-colors cursor-default">React + Flask</span></li>
+            <li><span className="hover:text-neon-green transition-colors cursor-default">PyTorch Model</span></li>
+          </ul>
+        </div>
       </div>
       
       <div className="max-w-7xl mx-auto mt-12 pt-8 border-t border-dark-border flex flex-col md:flex-row items-center justify-between text-xs text-gray-500">
-        <p>© 2026 AI Guardian. All rights reserved.</p>
+        <p>© 2026 AI Guardian. Built for Academic Purpose.</p>
         <p className="mt-2 md:mt-0">Deepfake Detection using Neural Networks</p>
       </div>
     </footer>
