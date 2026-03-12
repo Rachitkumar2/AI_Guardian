@@ -284,6 +284,4 @@ curl -X POST -F "file=@audio.wav" http://localhost:5000/api/detect
 
 ---
 
-<p align="center">
-  Made with ❤️ by <a href="https://github.com/yourusername">Subham Bose</a>
-</p>
+
