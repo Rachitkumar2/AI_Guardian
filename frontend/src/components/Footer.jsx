@@ -46,15 +46,6 @@ export default function Footer() {
           </ul>
         </div>
 
-        <div>
-          <h4 className="font-semibold mb-4 text-white">About Project</h4>
-          <ul className="space-y-3 text-sm text-gray-400">
-            <li><span className="hover:text-neon-green transition-colors cursor-default">College Project</span></li>
-            <li><span className="hover:text-neon-green transition-colors cursor-default">Machine Learning</span></li>
-            <li><span className="hover:text-neon-green transition-colors cursor-default">React + Flask</span></li>
-            <li><span className="hover:text-neon-green transition-colors cursor-default">PyTorch Model</span></li>
-          </ul>
-        </div>
       </div>
       
       <div className="max-w-7xl mx-auto mt-12 pt-8 border-t border-dark-border flex flex-col md:flex-row items-center justify-between text-xs text-gray-500">
