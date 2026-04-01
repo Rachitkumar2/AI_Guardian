@@ -23,6 +23,7 @@ except ConfigurationError:
 users_collection = db["users"]
 sessions_collection = db["sessions"]
 login_history_collection = db["login_history"]
+detections_collection = db["detections"]
 
 # Create unique index on email
 users_collection.create_index("email", unique=True)

@@ -13,3 +13,5 @@ dnspython
 PyJWT
 bcrypt
 python-dotenv
+transformers
+scikit-learn

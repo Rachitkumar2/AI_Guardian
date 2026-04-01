@@ -6,6 +6,7 @@ import Library from './pages/Library';
 import Tools from './pages/Tools';
 import DashboardLayout from './components/DashboardLayout';
 import Dashboard from './pages/Dashboard';
+import DetectionHistory from './pages/DetectionHistory';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import SettingsLayout from './components/SettingsLayout';
@@ -30,7 +31,7 @@ function App() {
             <Footer />
           </div>
         } />
-        
+
         <Route path="/library" element={
           <div className="flex flex-col min-h-screen">
             <Navbar active="library" />
@@ -50,10 +51,11 @@ function App() {
             <Footer />
           </div>
         } />
-        
+
         {/* App Dashboard Layout */}
         <Route path="/app" element={<DashboardLayout />}>
           <Route index element={<Dashboard />} />
+          <Route path="history" element={<DetectionHistory />} />
           {/* Add more nested routes here if needed */}
         </Route>
 
