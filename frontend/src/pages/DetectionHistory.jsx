@@ -70,11 +70,6 @@ export default function DetectionHistory() {
 
     return (
         <div className="max-w-7xl mx-auto w-full space-y-8">
-            <div>
-                <h2 className="text-3xl font-bold mb-2">Detection History</h2>
-                <p className="text-gray-400 text-sm">View and manage your past audio analysis scans.</p>
-            </div>
-
             {loading ? (
                 <div className="flex flex-col items-center justify-center py-20">
                     <Loader2 className="w-10 h-10 text-neon-green animate-spin mb-4" />

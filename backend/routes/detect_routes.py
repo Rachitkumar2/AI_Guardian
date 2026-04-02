@@ -31,6 +31,16 @@ def detect():
             user_id = decoded.get("user_id")
         except Exception:
             pass
+    client_ip = request.headers.get("X-Forwarded-For", request.remote_addr)
+    # Check limit for unauthenticated users
+    if not user_id:
+        limit_check = detections_collection.count_documents({"ip": client_ip, "user_id": None})
+        if limit_check >= 2:
+            return jsonify({
+                "error": "limit_reached", 
+                "message": "You have reached your limit of 2 free scans. Please log in to continue."
+            }), 403
+
     if "file" not in request.files:
         return jsonify({"error": "no_file", "message": "No file uploaded"}), 400
 
@@ -52,18 +62,18 @@ def detect():
     try:
         prediction = predict_audio(file_path)
         
-        # Save history if user is authenticated
-        if user_id:
-            record = {
-                "user_id": user_id,
-                "filename": base_filename,
-                "result": prediction["result"],
-                "confidence": prediction["confidence"],
-                "confidence_level": prediction.get("confidence_level", "Unknown"),
-                "signals": prediction.get("signals", []),
-                "timestamp": datetime.utcnow()
-            }
-            detections_collection.insert_one(record)
+        # Save history for both authenticated and anonymous (IP) tracking
+        record = {
+            "user_id": user_id,
+            "ip": client_ip,
+            "filename": base_filename,
+            "result": prediction["result"],
+            "confidence": prediction["confidence"],
+            "confidence_level": prediction.get("confidence_level", "Unknown"),
+            "signals": prediction.get("signals", []),
+            "timestamp": datetime.utcnow()
+        }
+        detections_collection.insert_one(record)
             
         return jsonify({
             "result": prediction["result"],

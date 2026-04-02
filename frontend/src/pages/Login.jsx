@@ -136,7 +136,7 @@ export default function Login() {
         <div className="fixed top-6 inset-x-0 z-50 flex justify-center animate-slide-down">
           <div className="bg-[#1C2A22] border border-[#2A3F33] rounded-xl px-6 py-4 flex items-center gap-3 shadow-lg">
             <CheckCircle2 className="w-5 h-5 text-neon-green" />
-            <span className="text-white font-semibold text-sm">Authentication successful.</span>
+            <span className="text-white font-semibold text-sm">Logged in successfully</span>
           </div>
         </div>
       )}

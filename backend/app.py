@@ -16,12 +16,14 @@ load_dotenv()
 # In production, serve React build from ../frontend/build
 app = Flask(__name__, static_folder='../frontend/build', static_url_path='')
 
-# CORS with credentials support for HTTP-only cookies
+# CORS with credentials support
 CORS(app, supports_credentials=True, origins=[
     "http://localhost:5173",
     "http://localhost:3000",
     "http://localhost:3001",
-    "http://localhost:5000"
+    "http://localhost:5000",
+    "http://192.168.29.107:3000",
+    "http://192.168.29.107:5173"
 ])
 
 # Ensure uploads directory exists

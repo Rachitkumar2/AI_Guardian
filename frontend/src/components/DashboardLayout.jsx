@@ -170,7 +170,13 @@ export default function DashboardLayout() {
             >
               <Menu className="w-5 h-5" />
             </button>
-            <h1 className="font-semibold text-lg max-sm:text-base hidden sm:block">AI Guardian <span className="opacity-50">/</span> Dash</h1>
+            <h1 className="font-bold text-2xl max-sm:text-lg hidden sm:block">
+              {
+                navItems.find(i => i.path === path)?.name || 
+                systemItems.find(i => i.path === path)?.name || 
+                'Dashboard'
+              }
+            </h1>
           </div>
           <div className="flex items-center gap-4">
 

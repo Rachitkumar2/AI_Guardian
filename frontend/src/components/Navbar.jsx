@@ -92,13 +92,13 @@ export default function Navbar() {
         })}
       </div>
 
-      {/* Right Actions (Desktop) */}
-      <div className="hidden md:flex items-center gap-4">
+      {/* Right Actions & Mobile Toggle */}
+      <div className="flex items-center gap-3 md:gap-4 z-[51]">
         {user ? (
           <>
             <Link
               to="/app"
-              className="bg-neon-green text-black px-5 py-2 rounded-md text-sm font-semibold hover:bg-neon-green-hover transition-colors neon-glow"
+              className="hidden sm:block bg-neon-green text-black px-5 py-2 rounded-md text-sm font-semibold hover:bg-neon-green-hover transition-colors neon-glow"
             >
               Dashboard
             </Link>
@@ -107,12 +107,12 @@ export default function Navbar() {
             <div className="relative" ref={profileRef}>
               <button
                 onClick={() => setShowProfileMenu(!showProfileMenu)}
-                className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+                className="flex items-center gap-1 md:gap-2 hover:opacity-80 transition-opacity"
               >
-                <div className="w-9 h-9 rounded-full bg-neon-green/20 border-2 border-neon-green/40 flex items-center justify-center cursor-pointer">
-                  <span className="text-neon-green text-sm font-bold">{getInitials()}</span>
+                <div className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-neon-green/20 border-2 border-neon-green/40 flex items-center justify-center cursor-pointer">
+                  <span className="text-neon-green text-xs md:text-sm font-bold">{getInitials()}</span>
                 </div>
-                <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${showProfileMenu ? 'rotate-180' : ''}`} />
+                <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform hidden sm:block ${showProfileMenu ? 'rotate-180' : ''}`} />
               </button>
 
               {/* Dropdown Menu */}
@@ -123,6 +123,13 @@ export default function Navbar() {
                     <p className="text-xs text-gray-400 truncate">{user?.email || ''}</p>
                   </div>
                   <div className="p-1.5">
+                    <Link
+                       className="sm:hidden flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 hover:text-white hover:bg-[#1C2A22] transition-colors"
+                       to="/app"
+                       onClick={() => setShowProfileMenu(false)}
+                    >
+                      Dashboard
+                    </Link>
                     <Link
                       to="/settings/profile"
                       onClick={() => setShowProfileMenu(false)}
@@ -145,26 +152,29 @@ export default function Navbar() {
           </>
         ) : (
           <>
-            <Link to="/login" className="text-sm font-medium text-gray-300 hover:text-white transition-colors">
+            <Link 
+              to="/login" 
+              className="text-xs md:text-sm font-bold md:font-medium transition-all text-black bg-neon-green px-3 py-1.5 md:px-0 md:py-0 rounded-lg md:rounded-none md:text-gray-300 md:hover:text-white md:bg-transparent md:hover:bg-transparent"
+            >
               Log In
             </Link>
             <Link
               to="/app"
-              className="bg-neon-green text-black px-5 py-2 rounded-md text-sm font-semibold hover:bg-neon-green-hover transition-colors neon-glow"
+              className="hidden sm:block bg-neon-green text-black px-5 py-2 rounded-md text-sm font-semibold hover:bg-neon-green-hover transition-colors neon-glow"
             >
               Try for free
             </Link>
           </>
         )}
-      </div>
 
-      {/* Mobile Hamburger Toggle */}
-      <button
-        onClick={() => setShowMobileMenu(!showMobileMenu)}
-        className="md:hidden p-2 text-gray-300 hover:text-white transition-colors relative z-[51]"
-      >
-        {showMobileMenu ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-      </button>
+        {/* Mobile Hamburger Toggle */}
+        <button
+          onClick={() => setShowMobileMenu(!showMobileMenu)}
+          className="md:hidden p-1.5 text-gray-300 hover:text-white transition-colors bg-[#1C2A22]/50 rounded-lg ml-1"
+        >
+          {showMobileMenu ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+        </button>
+      </div>
 
       {/* Mobile Menu Dropdown */}
       {showMobileMenu && (
@@ -185,62 +195,6 @@ export default function Navbar() {
                 </Link>
               );
             })}
-          </div>
-
-          <div className="mt-12 pt-8 border-t border-dark-border flex flex-col gap-4 w-full">
-            {user ? (
-              <>
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="w-12 h-12 rounded-full bg-neon-green/20 border-2 border-neon-green/40 flex items-center justify-center">
-                    <span className="text-neon-green font-bold">{getInitials()}</span>
-                  </div>
-                  <div>
-                    <p className="font-semibold text-white">{user?.name || 'User'}</p>
-                    <p className="text-sm text-gray-400">{user?.email || ''}</p>
-                  </div>
-                </div>
-                <Link
-                  to="/app"
-                  onClick={() => setShowMobileMenu(false)}
-                  className="bg-neon-green text-black px-5 py-3 rounded-xl text-center font-bold"
-                >
-                  Dashboard
-                </Link>
-                <Link
-                  to="/settings/profile"
-                  onClick={() => setShowMobileMenu(false)}
-                  className="flex items-center justify-center gap-3 px-5 py-3 rounded-xl bg-dark-border text-white font-semibold"
-                >
-                  Account Settings
-                </Link>
-                <button
-                  onClick={() => {
-                    handleLogout();
-                    setShowMobileMenu(false);
-                  }}
-                  className="flex items-center justify-center gap-3 px-5 py-3 rounded-xl border border-red-500/30 text-red-400 hover:bg-red-500/10 font-semibold"
-                >
-                  Sign Out
-                </button>
-              </>
-            ) : (
-              <>
-                <Link
-                  to="/login"
-                  onClick={() => setShowMobileMenu(false)}
-                  className="py-3 text-center text-lg font-semibold text-gray-300 hover:text-white"
-                >
-                  Log In
-                </Link>
-                <Link
-                  to="/app"
-                  onClick={() => setShowMobileMenu(false)}
-                  className="bg-neon-green text-black px-5 py-4 rounded-xl text-center font-bold text-lg"
-                >
-                  Try for free
-                </Link>
-              </>
-            )}
           </div>
         </div>
       )}

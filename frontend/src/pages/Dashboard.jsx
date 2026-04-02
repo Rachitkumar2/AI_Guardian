@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import { Upload, Link as LinkIcon, AlertTriangle, CheckCircle2, Activity, Loader2, History, ShieldCheck, ShieldAlert } from 'lucide-react';
 import { useDropzone } from 'react-dropzone';
 
@@ -53,8 +54,6 @@ export default function Dashboard() {
     } catch (error) {
       console.error('Error uploading file:', error);
       setUploadError(error.message);
-      // Auto-clear error after 10 seconds
-      setTimeout(() => setUploadError(''), 10000);
     } finally {
       setIsAnalyzing(false);
     }
@@ -140,18 +139,19 @@ export default function Dashboard() {
         </div>
 
         {uploadError && (
-          <div className="p-4 bg-red-500/10 border border-red-500/50 rounded-xl flex items-start gap-3 text-red-400 animate-slide-down shadow-lg">
+          <div className="p-4 bg-red-500/10 border border-red-500/50 rounded-xl flex items-start gap-3 text-red-400 animate-slide-down">
             <div className="p-1 shrink-0"><AlertTriangle className="w-5 h-5 text-red-500" /></div>
             <div>
               <p className="font-bold text-sm text-red-500">Detection Failed</p>
               <p className="text-sm mt-0.5">{uploadError}</p>
+              {uploadError.includes('limit of 2 free scans') && (
+                <div className="mt-3 mb-1">
+                  <Link to="/login" className="bg-red-500 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-red-600 transition-colors">
+                    Log in to continue
+                  </Link>
+                </div>
+              )}
             </div>
-            <button
-              onClick={() => setUploadError('')}
-              className="ml-auto text-red-500 hover:text-red-400 transition-colors"
-            >
-              &times;
-            </button>
           </div>
         )}
 
