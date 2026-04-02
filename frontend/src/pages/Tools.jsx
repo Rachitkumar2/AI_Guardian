@@ -36,13 +36,13 @@ export default function Tools() {
     <div className="w-full flex flex-col min-h-[calc(100vh-80px)] relative">
       <div className="flex-1 pb-24">
         {/* Header content */}
-        <section className="max-w-7xl mx-auto px-8 py-16">
+        <section className="max-w-7xl mx-auto px-4 md:px-8 py-12 md:py-16">
           <div className="flex flex-col md:flex-row md:items-start justify-between gap-8 mb-16">
             <div className="max-w-2xl">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#151E18] border border-[#1C2A22] text-neon-green text-xs font-bold tracking-wider mb-6">
                 SECURITY SUITE
               </div>
-              <h1 className="text-5xl lg:text-6xl font-bold tracking-tight mb-6">
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-6">
                 AI Voice <span className="text-neon-green">Detection Tools</span>
               </h1>
               <p className="text-gray-400 text-lg leading-relaxed">
@@ -88,10 +88,10 @@ export default function Tools() {
       </div>
 
       {/* SYSTEM STATUS BAR */}
-      <div className="w-full bg-[#121A15] border-t border-[#1C2A22] py-4 px-8 mt-auto sticky bottom-0 z-10">
+      <div className="w-full bg-[#121A15] border-t border-[#1C2A22] py-4 px-4 md:px-8 mt-auto sticky bottom-0 z-10">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex flex-col sm:flex-row items-center gap-6">
-            <h4 className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">System Status</h4>
+            <h4 className="text-[10px] text-gray-400 font-bold uppercase tracking-widest text-center sm:text-left">System Status</h4>
             <div className="flex items-center gap-4 text-xs font-medium">
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-neon-green shadow-[0_0_8px_#00FF66]"></div>

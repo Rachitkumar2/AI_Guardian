@@ -5,13 +5,13 @@ export default function Home() {
   return (
     <div className="w-full">
       {/* Hero Section */}
-      <section className="max-w-7xl mx-auto px-8 py-12 lg:py-20 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+      <section className="max-w-7xl mx-auto px-4 md:px-8 py-12 lg:py-20 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
         <div>
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#151E18] border border-[#1C2A22] text-neon-green text-xs font-bold tracking-wider mb-6">
             <span className="w-2 h-2 rounded-full bg-neon-green animate-pulse"></span>
             NEW: DEEPFAKE V4 DETECTION
           </div>
-          <h1 className="text-5xl lg:text-7xl font-bold tracking-tight mb-6 leading-tight">
+          <h1 className="text-4xl md:text-5xl lg:text-7xl font-bold tracking-tight mb-6 leading-tight">
             Protect your identity from <span className="text-neon-green">AI voice clones</span>
           </h1>
           <p className="text-gray-400 text-lg mb-10 max-w-lg leading-relaxed">
@@ -64,7 +64,7 @@ export default function Home() {
 
       {/* 3 Step Process */}
       <section className="py-24 bg-[#121A15] border-y border-dark-border">
-        <div className="max-w-7xl mx-auto px-8">
+        <div className="max-w-7xl mx-auto px-4 md:px-8">
           <div className="text-center max-w-2xl mx-auto mb-16">
             <h2 className="text-3xl lg:text-4xl font-bold mb-4">How AI Guardian Detects Fakes</h2>
             <p className="text-gray-400">Our proprietary neural networks look beyond the audible sound to find the microscopic digital signatures left by AI generative models.</p>
@@ -99,7 +99,7 @@ export default function Home() {
       </section>
 
       {/* Enterprise Features */}
-      <section className="py-24 max-w-7xl mx-auto px-8 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+      <section className="py-16 md:py-24 max-w-7xl mx-auto px-4 md:px-8 grid grid-cols-1 lg:grid-cols-2 gap-12 md:gap-16 items-center">
         <div className="relative">
           <div className="glass-panel p-2 shadow-2xl relative z-10">
             <div className="bg-[#0E1511] rounded-lg border border-[#1C2A22] overflow-hidden">
@@ -167,10 +167,10 @@ export default function Home() {
       </section>
 
       {/* CTA Section */}
-      <section className="max-w-7xl mx-auto px-8 py-24">
-        <div className="bg-neon-green rounded-3xl p-12 lg:p-20 text-center text-black shadow-[0_0_50px_rgba(0,255,102,0.2)]">
-          <h2 className="text-4xl lg:text-5xl font-black tracking-tight mb-6">Ready to detect deepfakes?</h2>
-          <p className="text-black/80 font-medium max-w-2xl mx-auto mb-10 text-lg">
+      <section className="max-w-7xl mx-auto px-4 md:px-8 py-16 md:py-24">
+        <div className="bg-neon-green rounded-3xl p-8 md:p-12 lg:p-20 text-center text-black shadow-[0_0_50px_rgba(0,255,102,0.2)]">
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-black tracking-tight mb-6">Ready to detect deepfakes?</h2>
+          <p className="text-black/80 font-medium max-w-2xl mx-auto mb-10 md:text-lg">
             Start analyzing audio files now and protect yourself from AI-generated voice clones.
           </p>
           <div className="flex justify-center">

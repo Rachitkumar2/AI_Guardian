@@ -15,7 +15,7 @@ export default function ProfileSettings() {
         if (token) {
           headers['Authorization'] = 'Bearer ' + token;
         }
-        const response = await fetch('/api/profile', { 
+        const response = await fetch('/api/profile', {
           credentials: 'include',
           headers
         });
@@ -50,6 +50,10 @@ export default function ProfileSettings() {
         body: JSON.stringify({ name: profile.name })
       });
       if (response.ok) {
+        const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+        localStorage.setItem('user', JSON.stringify({ ...storedUser, name: profile.name }));
+        window.dispatchEvent(new Event('authChange'));
+
         setMessage('Profile updated successfully');
         setTimeout(() => setMessage(''), 3000);
       }
@@ -64,7 +68,7 @@ export default function ProfileSettings() {
 
   return (
     <div className="space-y-6 max-w-4xl">
-      
+
       {/* Profile Information Card */}
       <div className="bg-[#151e18] border border-[#1c2a22] rounded-xl overflow-hidden shadow-sm">
         <div className="flex items-center gap-3 px-8 pt-8 pb-6">
@@ -93,7 +97,7 @@ export default function ProfileSettings() {
                 required
               />
             </div>
-            
+
             <div>
               <label className="block text-[13px] font-semibold mb-2 text-white">Email Address</label>
               <input
