@@ -73,7 +73,7 @@ def detect():
         }), 200
     except Exception as e:
         current_app.logger.exception("Error during detection")
-        return jsonify({"error": "detection_failed", "message": "An internal error occurred during detection"}), 500
+        return jsonify({"error": "detection_failed", "message": str(e)}), 500
     finally:
         try:
             if os.path.exists(file_path):

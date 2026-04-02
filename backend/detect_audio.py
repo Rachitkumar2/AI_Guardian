@@ -19,7 +19,7 @@ MODEL_NAME = os.environ.get(
     "HF_MODEL_NAME", "garystafford/wav2vec2-deepfake-voice-detector"
 )
 SAMPLE_RATE = 16000
-MAX_DURATION_SEC = 5  # seconds
+MAX_DURATION_SEC = 15  # Handle up to 15 seconds optimally
 
 # ---------------------------------------------------------------------------
 # Load model & feature extractor once at import time
@@ -146,57 +146,79 @@ def _get_confidence_level(confidence):
 # ---------------------------------------------------------------------------
 def predict_audio(file_path):
     """
-    Returns dict with "result" ("Real"/"Fake"), "confidence" (0-100%),
+    Returns dict with "result" ("Real"/"Fake"/"Uncertain"), "confidence" (0-100%),
     "confidence_level" ("Low"/"Moderate"/"High"), and "signals" (list).
-    Raises exceptions with descriptive messages on failure.
     """
+    import noisereduce as nr
+
     if model is None or feature_extractor is None:
-        raise RuntimeError(
-            "Pretrained model is not loaded. Check logs for errors. "
-            "Ensure 'transformers' is installed: pip install transformers"
-        )
+        raise RuntimeError("Pretrained model is not loaded. Check logs for errors.")
 
     if not os.path.exists(file_path):
         raise FileNotFoundError(f"Audio file not found: {file_path}")
 
-    # Load audio at 16 kHz mono
-    audio, sr = librosa.load(file_path, sr=SAMPLE_RATE, duration=MAX_DURATION_SEC)
+    try:
+        # Load audio at 16 kHz mono
+        audio, sr = librosa.load(file_path, sr=SAMPLE_RATE, duration=MAX_DURATION_SEC)
+    except Exception as e:
+        raise RuntimeError(f"Failed to decode or parse audio file format: {str(e)}")
 
-    # Pad short clips to minimum length for the model
-    min_length = SAMPLE_RATE  # at least 1 second
-    if len(audio) < min_length:
-        audio = np.pad(audio, (0, min_length - len(audio)), mode="constant")
+    # 1. Validation & Preprocessing
+    if len(audio) < SAMPLE_RATE * 5.0:
+        raise ValueError("Audio duration too short. Please provide at least 5 to 15 seconds of speaking audio.")
 
-    # Extract spectral features for UI signals (independent of model)
+    # Normalize volume
+    audio = librosa.util.normalize(audio)
+    
+    # Apply noise reduction to remove background static
+    audio = nr.reduce_noise(y=audio, sr=SAMPLE_RATE, prop_decrease=0.8)
+
+    # Extract UI features (independent of model)
     sig_feats = _extract_signal_features(audio, sr=SAMPLE_RATE)
 
-    # Prepare input for the pretrained model
-    inputs = feature_extractor(
-        audio,
-        sampling_rate=SAMPLE_RATE,
-        return_tensors="pt",
-        padding=True,
-    )
-
+    # 2. Stability Enhancement (Segmented Window Averaging)
+    chunk_size = SAMPLE_RATE * 5  # 5 seconds
+    stride = SAMPLE_RATE * 2      # 2 seconds overlap
+    probs_list = []
+    
     try:
-        with torch.no_grad():
-            logits = model(**inputs).logits
-            probabilities = torch.softmax(logits, dim=1)
-            pred = int(torch.argmax(logits, dim=-1).item())
-            confidence = float(probabilities[0][pred].item()) * 100
-
-        # Map model label to our Real/Fake format
-        model_label = model.config.id2label.get(pred, "").lower()
-        if "fake" in model_label or "spoof" in model_label:
+        for start in range(0, max(1, len(audio) - chunk_size + 1), stride):
+            chunk = audio[start : start + chunk_size]
+            # pad short segments natively
+            if len(chunk) < chunk_size:
+                 chunk = np.pad(chunk, (0, chunk_size - len(chunk)), mode="constant")
+                 
+            inputs = feature_extractor(chunk, sampling_rate=SAMPLE_RATE, return_tensors="pt", padding=True)
+            with torch.no_grad():
+                logits = model(**inputs).logits
+                probs = torch.softmax(logits, dim=1)
+                probs_list.append(probs)
+                
+        # Average probability tensors from all 5-second overlapping chunks
+        avg_probs = torch.mean(torch.stack(probs_list), dim=0).squeeze(0)
+        
+        # 3. Threshold Tuning
+        # Index 1 = Fake, Index 0 = Real
+        fake_prob = float(avg_probs[1].item()) * 100  
+        
+        if fake_prob >= 70.0:
             result = "Fake"
-        elif "real" in model_label or "bonafide" in model_label or "original" in model_label:
-            result = "Real"
+            base_confidence = fake_prob
+        elif fake_prob >= 40.0:
+            result = "Uncertain"
+            base_confidence = fake_prob
         else:
-            # Fallback: class 0 = Real, class 1 = Fake (most common convention)
-            result = "Fake" if pred == 1 else "Real"
+            result = "Real"
+            base_confidence = 100.0 - fake_prob
 
-        confidence_rounded = round(confidence, 2)
+        # 4. Ensemble Method Hybrid (Manual Spectral Correlators overriding Uncertain boundary logic)
+        if result == "Uncertain" and sig_feats:
+            artifact_raw = (sig_feats["spectral_rolloff"] / 8000.0) * 50
+            if artifact_raw > 75.0:
+                result = "Fake"
+                base_confidence = 72.0  # Just pushed over the edge via ensemble
 
+        confidence_rounded = round(base_confidence, 2)
         signals = _compute_detection_signals(sig_feats, result == "Fake", confidence_rounded)
 
         return {
@@ -206,5 +228,5 @@ def predict_audio(file_path):
             "signals": signals,
         }
     except Exception as e:
-        logger.exception("Inference failed")
-        raise RuntimeError(f"Inference failed: {e}")
+        logger.exception("Inference processing failed")
+        raise RuntimeError(f"Advanced inference failed: {e}")
