@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { Shield, LayoutDashboard, History, Settings, HelpCircle, Bell, LogOut, ChevronDown } from 'lucide-react';
+import { Shield, LayoutDashboard, History, Settings, HelpCircle, Bell, LogOut, ChevronDown, Menu, X } from 'lucide-react';
 
 // Use environment variable for API base URL, fallback to relative path for production
 const API_BASE = import.meta.env.VITE_API_URL || '';
@@ -10,6 +10,7 @@ export default function DashboardLayout() {
   const navigate = useNavigate();
   const path = location.pathname;
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [showMobileSidebar, setShowMobileSidebar] = useState(false);
   const profileRef = useRef(null);
 
   // Get user info from localStorage
@@ -73,17 +74,31 @@ export default function DashboardLayout() {
   ];
 
   return (
-    <div className="flex h-screen bg-dark-bg">
+    <div className="flex h-screen bg-dark-bg overflow-hidden relative">
+      {/* Mobile Backdrop */}
+      {showMobileSidebar && (
+        <div 
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden"
+          onClick={() => setShowMobileSidebar(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <aside className="w-64 border-r border-dark-border flex flex-col pt-6 pb-6 bg-[#121A15]">
-        <div className="px-6 mb-8">
-          <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+      <aside className={`fixed inset-y-0 left-0 bg-[#121A15] border-r border-dark-border w-64 flex flex-col pt-6 pb-6 z-50 transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 ${showMobileSidebar ? 'translate-x-0' : '-translate-x-full'}`}>
+        <div className="px-6 mb-8 flex items-center justify-between">
+          <Link to="/" onClick={() => setShowMobileSidebar(false)} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
             <Shield className="w-6 h-6 text-neon-green" fill="#00FF66" strokeWidth={1} />
             <div>
               <div className="font-bold text-lg tracking-wide uppercase leading-tight">AI Guardian</div>
               <div className="text-neon-green text-xs font-medium">Secure Detection</div>
             </div>
           </Link>
+          <button 
+            onClick={() => setShowMobileSidebar(false)}
+            className="md:hidden text-gray-400 hover:text-white mt-1"
+          >
+            <X className="w-5 h-5" />
+          </button>
         </div>
 
         <nav className="flex-1 px-4 space-y-1">
@@ -94,6 +109,7 @@ export default function DashboardLayout() {
               <Link
                 key={item.name}
                 to={item.path}
+                onClick={() => setShowMobileSidebar(false)}
                 className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                   isActive ? 'bg-dark-border text-neon-green' : 'text-gray-400 hover:text-white hover:bg-dark-border/50'
                 }`}
@@ -115,6 +131,7 @@ export default function DashboardLayout() {
               <Link
                 key={item.name}
                 to={item.path}
+                onClick={() => setShowMobileSidebar(false)}
                 className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                   isActive ? 'bg-dark-border text-neon-green' : 'text-gray-400 hover:text-white hover:bg-dark-border/50'
                 }`}
@@ -143,10 +160,18 @@ export default function DashboardLayout() {
       </aside>
 
       {/* Main Content Area */}
-      <main className="flex-1 flex flex-col h-full overflow-hidden">
+      <main className="flex-1 flex flex-col h-full overflow-hidden relative">
         {/* Dashboard Header */}
-        <header className="h-16 flex items-center justify-between px-8 border-b border-dark-border shrink-0 bg-dark-bg">
-          <h1 className="font-semibold text-lg">New Analysis</h1>
+        <header className="h-16 flex items-center justify-between px-4 md:px-8 border-b border-dark-border shrink-0 bg-dark-bg z-10">
+          <div className="flex items-center gap-3">
+            <button 
+              className="md:hidden p-1.5 text-gray-400 hover:text-white transition-colors bg-dark-border/50 rounded-lg"
+              onClick={() => setShowMobileSidebar(true)}
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+            <h1 className="font-semibold text-lg max-sm:text-base hidden sm:block">AI Guardian <span className="opacity-50">/</span> Dash</h1>
+          </div>
           <div className="flex items-center gap-4">
 
             {/* Profile Avatar with Dropdown */}
@@ -201,7 +226,7 @@ export default function DashboardLayout() {
         </header>
         
         {/* Scrollable Content */}
-        <div className="flex-1 overflow-auto p-8 custom-scrollbar">
+        <div className="flex-1 overflow-auto p-4 md:p-8 custom-scrollbar relative z-0">
           <Outlet />
         </div>
       </main>

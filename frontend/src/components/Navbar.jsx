@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Shield, LogOut, Settings, ChevronDown } from 'lucide-react';
+import { Shield, LogOut, Settings, ChevronDown, Menu, X } from 'lucide-react';
 
 export default function Navbar() {
   const location = useLocation();
@@ -8,6 +8,7 @@ export default function Navbar() {
   const path = location.pathname;
   const [user, setUser] = useState(null);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
   const profileRef = useRef(null);
 
   // Close profile menu when clicking outside
@@ -66,14 +67,14 @@ export default function Navbar() {
   ];
 
   return (
-    <nav className="flex items-center justify-between px-8 py-5 border-b border-dark-border/50 sticky top-0 z-50 bg-[#0E1511]/90 backdrop-blur-md">
+    <nav className="flex items-center justify-between px-4 md:px-8 py-4 md:py-5 border-b border-dark-border/50 sticky top-0 z-50 bg-[#0E1511]/90 backdrop-blur-md">
       {/* Logo */}
-      <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+      <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity relative z-[51]">
         <Shield className="w-6 h-6 text-neon-green" fill="#00FF66" strokeWidth={1} />
         <span className="font-bold text-lg tracking-wide uppercase">AI Guardian</span>
       </Link>
 
-      {/* Center Links */}
+      {/* Center Links (Desktop) */}
       <div className="hidden md:flex items-center gap-8">
         {links.map((link) => {
           const isActive = path === link.path || (path.startsWith(link.path) && link.path !== '/');
@@ -91,8 +92,8 @@ export default function Navbar() {
         })}
       </div>
 
-      {/* Right Actions */}
-      <div className="flex items-center gap-4">
+      {/* Right Actions (Desktop) */}
+      <div className="hidden md:flex items-center gap-4">
         {user ? (
           <>
             <Link
@@ -156,6 +157,93 @@ export default function Navbar() {
           </>
         )}
       </div>
+
+      {/* Mobile Hamburger Toggle */}
+      <button
+        onClick={() => setShowMobileMenu(!showMobileMenu)}
+        className="md:hidden p-2 text-gray-300 hover:text-white transition-colors relative z-[51]"
+      >
+        {showMobileMenu ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+      </button>
+
+      {/* Mobile Menu Dropdown */}
+      {showMobileMenu && (
+        <div className="absolute top-0 left-0 w-full h-screen bg-[#0E1511]/95 backdrop-blur-xl z-50 flex flex-col pt-24 px-6 md:hidden">
+          <div className="flex flex-col gap-6">
+            {links.map((link) => {
+              const isActive = path === link.path || (path.startsWith(link.path) && link.path !== '/');
+              return (
+                <Link
+                  key={link.name}
+                  to={link.path}
+                  onClick={() => setShowMobileMenu(false)}
+                  className={`text-xl font-bold transition-colors ${
+                    isActive ? 'text-neon-green' : 'text-gray-300 hover:text-white'
+                  }`}
+                >
+                  {link.name}
+                </Link>
+              );
+            })}
+          </div>
+
+          <div className="mt-12 pt-8 border-t border-dark-border flex flex-col gap-4 w-full">
+            {user ? (
+              <>
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="w-12 h-12 rounded-full bg-neon-green/20 border-2 border-neon-green/40 flex items-center justify-center">
+                    <span className="text-neon-green font-bold">{getInitials()}</span>
+                  </div>
+                  <div>
+                    <p className="font-semibold text-white">{user?.name || 'User'}</p>
+                    <p className="text-sm text-gray-400">{user?.email || ''}</p>
+                  </div>
+                </div>
+                <Link
+                  to="/app"
+                  onClick={() => setShowMobileMenu(false)}
+                  className="bg-neon-green text-black px-5 py-3 rounded-xl text-center font-bold"
+                >
+                  Dashboard
+                </Link>
+                <Link
+                  to="/settings/profile"
+                  onClick={() => setShowMobileMenu(false)}
+                  className="flex items-center justify-center gap-3 px-5 py-3 rounded-xl bg-dark-border text-white font-semibold"
+                >
+                  Account Settings
+                </Link>
+                <button
+                  onClick={() => {
+                    handleLogout();
+                    setShowMobileMenu(false);
+                  }}
+                  className="flex items-center justify-center gap-3 px-5 py-3 rounded-xl border border-red-500/30 text-red-400 hover:bg-red-500/10 font-semibold"
+                >
+                  Sign Out
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  to="/login"
+                  onClick={() => setShowMobileMenu(false)}
+                  className="py-3 text-center text-lg font-semibold text-gray-300 hover:text-white"
+                >
+                  Log In
+                </Link>
+                <Link
+                  to="/app"
+                  onClick={() => setShowMobileMenu(false)}
+                  className="bg-neon-green text-black px-5 py-4 rounded-xl text-center font-bold text-lg"
+                >
+                  Try for free
+                </Link>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </nav>
   );
 }

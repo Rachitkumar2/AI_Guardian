@@ -7,10 +7,12 @@ export default function Dashboard() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [currentResult, setCurrentResult] = useState(null);
   const [urlInput, setUrlInput] = useState('');
+  const [uploadError, setUploadError] = useState('');
 
   const handleFileUpload = async (file) => {
     setIsAnalyzing(true);
     setCurrentResult(null);
+    setUploadError('');
 
     const formData = new FormData();
     formData.append('file', file);
@@ -31,13 +33,15 @@ export default function Dashboard() {
       const confidenceRaw = data.confidence || 0;
       const confidencePercent = Math.round(confidenceRaw <= 1 ? confidenceRaw * 100 : confidenceRaw);
       const isFake = data.result?.toLowerCase() === 'fake';
+      const isUncertain = data.result?.toLowerCase() === 'uncertain';
 
       const newResult = {
         filename: file.name,
         time: 'Just now',
-        result: `${confidencePercent}% ${isFake ? 'Synthetic' : 'Natural'}`,
-        status: isFake ? 'FAKE' : 'REAL',
+        result: `${confidencePercent}% ${isFake ? 'Synthetic' : isUncertain ? 'Uncertain' : 'Natural'}`,
+        status: isFake ? 'FAKE' : isUncertain ? 'UNCERTAIN' : 'REAL',
         isFake: isFake,
+        isUncertain: isUncertain,
         confidence: confidencePercent,
         confidenceLevel: data.confidence_level || 'Unknown',
         signals: data.signals || [],
@@ -48,7 +52,9 @@ export default function Dashboard() {
 
     } catch (error) {
       console.error('Error uploading file:', error);
-      alert('Error analyzing file: ' + error.message);
+      setUploadError(error.message);
+      // Auto-clear error after 10 seconds
+      setTimeout(() => setUploadError(''), 10000);
     } finally {
       setIsAnalyzing(false);
     }
@@ -133,12 +139,28 @@ export default function Dashboard() {
           <p className="text-gray-400 text-sm">Upload audio or paste a URL to analyze for deepfake patterns using our neural network.</p>
         </div>
 
+        {uploadError && (
+          <div className="p-4 bg-red-500/10 border border-red-500/50 rounded-xl flex items-start gap-3 text-red-400 animate-slide-down shadow-lg">
+            <div className="p-1 shrink-0"><AlertTriangle className="w-5 h-5 text-red-500" /></div>
+            <div>
+              <p className="font-bold text-sm text-red-500">Detection Failed</p>
+              <p className="text-sm mt-0.5">{uploadError}</p>
+            </div>
+            <button
+              onClick={() => setUploadError('')}
+              className="ml-auto text-red-500 hover:text-red-400 transition-colors"
+            >
+              &times;
+            </button>
+          </div>
+        )}
+
         {(!isAnalyzing && !currentResult) ? (
           <div className="space-y-8 animate-in fade-in duration-500">
             {/* Upload Container */}
             <div
               {...getRootProps()}
-              className={`border ${isDragActive ? 'border-neon-green bg-neon-green/5' : 'border-[#1C2A22] bg-[#121A15]'} border-dashed rounded-2xl p-10 flex flex-col items-center justify-center text-center hover:border-neon-green/50 transition-colors cursor-pointer group relative`}
+              className={`border ${isDragActive ? 'border-neon-green bg-neon-green/5' : 'border-[#1C2A22] bg-[#121A15]'} border-dashed rounded-2xl p-6 md:p-10 flex flex-col items-center justify-center text-center hover:border-neon-green/50 transition-colors cursor-pointer group relative`}
             >
               <input {...getInputProps()} />
 
@@ -180,7 +202,7 @@ export default function Dashboard() {
 
             {/* Analyze Button */}
             <button
-              onClick={handleUrlAnalyze}
+              onClick={() => setUploadError("URL analysis is currently under development. Please upload an audio file instead.")}
               disabled={!urlInput.trim()}
               className="w-full bg-neon-green text-black py-4 rounded-xl font-black text-lg hover:bg-neon-green-hover disabled:opacity-50 disabled:hover:bg-neon-green transition-all shadow-[0_0_30px_rgba(0,255,102,0.3)] hover:shadow-[0_0_40px_rgba(0,255,102,0.5)] disabled:hover:shadow-[0_0_30px_rgba(0,255,102,0.3)]"
             >
@@ -189,7 +211,7 @@ export default function Dashboard() {
           </div>
         ) : (
           <div className="pt-2 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="flex justify-between items-center mb-6">
+            <div className="flex flex-wrap gap-4 justify-between items-center mb-6">
               <h2 className="text-xl font-bold">Analysis Verdict</h2>
               <button
                 onClick={() => { setIsAnalyzing(false); setCurrentResult(null); }}
@@ -214,7 +236,7 @@ export default function Dashboard() {
                       <circle cx="50" cy="50" r="45" fill="none" stroke="#1C2A22" strokeWidth="10" />
                       <circle
                         cx="50" cy="50" r="45" fill="none"
-                        stroke={currentResult ? (currentResult.isFake ? "#EF4444" : "#00FF66") : "#00FF66"}
+                        stroke={currentResult ? (currentResult.isFake ? "#EF4444" : currentResult.status === "UNCERTAIN" ? "#F59E0B" : "#00FF66") : "#00FF66"}
                         strokeWidth="10"
                         strokeDasharray={circumference}
                         strokeDashoffset={strokeDashoffset}
@@ -238,8 +260,8 @@ export default function Dashboard() {
 
                   <div className="text-center">
                     <div className="text-sm text-gray-400 mb-1">Likelihood of Synthesis</div>
-                    <div className={`font-black uppercase text-lg tracking-widest ${currentResult ? (currentResult.isFake ? 'text-red-500 shadow-red-500/50' : 'text-neon-green neon-text') : 'text-gray-500'}`}>
-                      {currentResult ? (currentResult.isFake ? 'HIGH RISK' : 'AUTHENTIC') : 'AWAITING FILE'}
+                    <div className={`font-black uppercase text-lg tracking-widest ${currentResult ? (currentResult.isFake ? 'text-red-500 shadow-red-500/50' : currentResult.status === "UNCERTAIN" ? 'text-amber-500 shadow-amber-500/50' : 'text-neon-green neon-text') : 'text-gray-500'}`}>
+                      {currentResult ? (currentResult.isFake ? 'HIGH RISK' : currentResult.status === "UNCERTAIN" ? "UNCERTAIN" : 'AUTHENTIC') : 'AWAITING FILE'}
                     </div>
                   </div>
                 </div>
@@ -302,9 +324,11 @@ export default function Dashboard() {
           ) : (
             recentResults.map((res, i) => (
               <div key={i} className="bg-[#121A15] border border-[#1C2A22] rounded-xl p-4 flex items-start gap-4 hover:border-[#2A3F33] transition-colors cursor-pointer">
-                <div className={`p-2 rounded-lg shrink-0 ${res.isFake ? 'bg-red-500/10' : 'bg-neon-green/10'}`}>
+                <div className={`p-2 rounded-lg shrink-0 ${res.isFake ? 'bg-red-500/10' : res.status === 'UNCERTAIN' ? 'bg-amber-500/10' : 'bg-neon-green/10'}`}>
                   {res.isFake ? (
                     <AlertTriangle className="w-5 h-5 text-red-500" />
+                  ) : res.status === 'UNCERTAIN' ? (
+                    <Activity className="w-5 h-5 text-amber-500" />
                   ) : (
                     <CheckCircle2 className="w-5 h-5 text-neon-green" />
                   )}
@@ -315,7 +339,7 @@ export default function Dashboard() {
                     {res.time} &bull; <span className="text-gray-400">{res.result}</span>
                   </div>
                 </div>
-                <div className={`text-[10px] font-bold px-2 py-1 rounded shrink-0 ${res.isFake ? 'bg-red-500/20 text-red-500 border border-red-500/30' : 'bg-neon-green/20 text-neon-green border border-neon-green/30'}`}>
+                <div className={`text-[10px] font-bold px-2 py-1 rounded shrink-0 ${res.isFake ? 'bg-red-500/20 text-red-500 border border-red-500/30' : res.status === 'UNCERTAIN' ? 'bg-amber-500/20 text-amber-500 border border-amber-500/30' : 'bg-neon-green/20 text-neon-green border border-neon-green/30'}`}>
                   {res.status}
                 </div>
               </div>
