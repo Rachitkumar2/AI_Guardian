@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Upload, Link as LinkIcon, AlertTriangle, CheckCircle2, Activity, Loader2, History, ShieldCheck, ShieldAlert } from 'lucide-react';
 import { useDropzone } from 'react-dropzone';
@@ -9,6 +9,23 @@ export default function Dashboard() {
   const [currentResult, setCurrentResult] = useState(null);
   const [urlInput, setUrlInput] = useState('');
   const [uploadError, setUploadError] = useState('');
+  const [isAuthenticated, setIsAuthenticated] = useState(Boolean(localStorage.getItem('token')));
+
+  useEffect(() => {
+    const handleAuthChange = () => {
+      const loggedIn = Boolean(localStorage.getItem('token'));
+      setIsAuthenticated(loggedIn);
+
+      if (loggedIn && uploadError.includes('limit of 2 free scans')) {
+        setUploadError('');
+      }
+    };
+
+    handleAuthChange();
+    window.addEventListener('authChange', handleAuthChange);
+
+    return () => window.removeEventListener('authChange', handleAuthChange);
+  }, [uploadError]);
 
   const handleFileUpload = async (file) => {
     setIsAnalyzing(true);
@@ -70,8 +87,12 @@ export default function Dashboard() {
     accept: {
       'audio/*': ['.mp3', '.wav', '.m4a']
     },
-    maxFiles: 1
+    maxFiles: 1,
+    disabled: !isAuthenticated && uploadError.includes('limit of 2 free scans')
   });
+
+  const isFreeTrialLocked = uploadError.includes('limit of 2 free scans');
+  const isUploadDisabled = !isAuthenticated && isFreeTrialLocked;
 
   const handleUrlAnalyze = () => {
     if (urlInput.trim()) {
@@ -147,7 +168,7 @@ export default function Dashboard() {
               {uploadError.includes('limit of 2 free scans') && (
                 <div className="mt-3 mb-1">
                   <Link to="/login" className="bg-red-500 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-red-600 transition-colors">
-                    Log in to continue
+                    Login
                   </Link>
                 </div>
               )}
@@ -158,23 +179,44 @@ export default function Dashboard() {
         {(!isAnalyzing && !currentResult) ? (
           <div className="space-y-8 animate-in fade-in duration-500">
             {/* Upload Container */}
-            <div
-              {...getRootProps()}
-              className={`border ${isDragActive ? 'border-neon-green bg-neon-green/5' : 'border-[#1C2A22] bg-[#121A15]'} border-dashed rounded-2xl p-6 md:p-10 flex flex-col items-center justify-center text-center hover:border-neon-green/50 transition-colors cursor-pointer group relative`}
-            >
-              <input {...getInputProps()} />
-
-              <div className="w-14 h-14 bg-[#1C2A22] rounded-full flex items-center justify-center mb-6 group-hover:bg-neon-green/20 transition-colors">
-                <Upload className="w-6 h-6 text-neon-green" />
+            {isUploadDisabled ? (
+              <div className="border border-red-500/40 bg-red-500/5 border-dashed rounded-2xl p-6 md:p-10 flex flex-col items-center justify-center text-center opacity-80">
+                <div className="w-14 h-14 bg-[#1C2A22] rounded-full flex items-center justify-center mb-6">
+                  <Upload className="w-6 h-6 text-neon-green" />
+                </div>
+                <h3 className="text-xl font-bold mb-2">Free Scans Exhausted</h3>
+                <p className="text-gray-400 text-sm mb-6 max-w-md">
+                  You have used all free scans. Log in to unlock file selection and continue analyzing audio.
+                </p>
+                <Link
+                  to="/login"
+                  className="bg-red-500 text-white px-6 py-2.5 rounded-lg font-bold hover:bg-red-600 transition-colors shadow-lg shadow-red-500/20"
+                >
+                  Login
+                </Link>
               </div>
-              <h3 className="text-xl font-bold mb-2">
-                {isDragActive ? 'Drop file here' : 'Upload Audio File'}
-              </h3>
-              <p className="text-gray-400 text-sm mb-6">Drag and drop your .mp3, .wav, or .m4a file</p>
-              <button className="bg-neon-green text-black px-6 py-2.5 rounded-lg font-bold hover:bg-neon-green-hover transition-colors shadow-lg shadow-neon-green/20 pointer-events-none">
-                Browse Files
-              </button>
-            </div>
+            ) : (
+              <div
+                {...getRootProps()}
+                className={`border ${isDragActive ? 'border-neon-green bg-neon-green/5' : 'border-[#1C2A22] bg-[#121A15]'} border-dashed rounded-2xl p-6 md:p-10 flex flex-col items-center justify-center text-center hover:border-neon-green/50 cursor-pointer transition-colors group relative`}
+              >
+                <input {...getInputProps()} />
+
+                <div className="w-14 h-14 bg-[#1C2A22] rounded-full flex items-center justify-center mb-6 group-hover:bg-neon-green/20 transition-colors">
+                  <Upload className="w-6 h-6 text-neon-green" />
+                </div>
+                <h3 className="text-xl font-bold mb-2">
+                  {isDragActive ? 'Drop file here' : 'Upload Audio File'}
+                </h3>
+                <p className="text-gray-400 text-sm mb-6">Drag and drop your .mp3, .wav, or .m4a file</p>
+                <button
+                  type="button"
+                  className="bg-neon-green text-black px-6 py-2.5 rounded-lg font-bold hover:bg-neon-green-hover transition-colors shadow-lg shadow-neon-green/20 pointer-events-none"
+                >
+                  Browse Files
+                </button>
+              </div>
+            )}
 
             {/* OR Divider */}
             <div className="flex items-center gap-4 py-2">

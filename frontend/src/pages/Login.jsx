@@ -19,6 +19,7 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [emailFocus, setEmailFocus] = useState(false);
+  const [loggedInUser, setLoggedInUser] = useState(null);
   const navigate = useNavigate();
 
   // Custom email validation for inline feedback
@@ -80,8 +81,9 @@ export default function Login() {
           localStorage.setItem('token', data.token);
         }
         window.dispatchEvent(new Event('authChange'));
+        setLoggedInUser(data.user);
         setSuccess(true);
-        setTimeout(() => navigate('/'), 1500);
+        setTimeout(() => navigate('/'), 2000);
       } else {
         setError(data.message || 'Invalid email or password');
       }
@@ -115,8 +117,9 @@ export default function Login() {
             localStorage.setItem('token', data.token);
           }
           window.dispatchEvent(new Event('authChange'));
+          setLoggedInUser(data.user);
           setSuccess(true);
-          setTimeout(() => navigate('/'), 1500);
+          setTimeout(() => navigate('/'), 2000);
         } else {
           setError(data.message || 'Google Login failed');
         }
@@ -134,9 +137,11 @@ export default function Login() {
       {/* Success Toast */}
       {success && (
         <div className="fixed top-6 inset-x-0 z-50 flex justify-center animate-slide-down">
-          <div className="bg-[#1C2A22] border border-[#2A3F33] rounded-xl px-6 py-4 flex items-center gap-3 shadow-lg">
+          <div className="bg-[#1C2A22] border border-neon-green/30 rounded-xl px-6 py-4 flex items-center gap-3 shadow-[0_0_30px_rgba(0,255,102,0.15)]">
             <CheckCircle2 className="w-5 h-5 text-neon-green" />
-            <span className="text-white font-semibold text-sm">Logged in successfully</span>
+            <span className="text-white font-semibold text-sm">
+              Welcome back, {loggedInUser?.name?.split(' ')[0] || 'User'}  🚀
+            </span>
           </div>
         </div>
       )}
