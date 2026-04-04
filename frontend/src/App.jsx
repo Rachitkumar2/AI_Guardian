@@ -12,6 +12,7 @@ import Signup from './pages/Signup';
 import SettingsLayout from './components/SettingsLayout';
 import ProfileSettings from './pages/settings/Profile';
 import SecuritySettings from './pages/settings/Security';
+import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
   return (
@@ -52,15 +53,15 @@ function App() {
           </div>
         } />
 
-        {/* App Dashboard Layout */}
+        {/* App Dashboard Layout - Public */}
         <Route path="/app" element={<DashboardLayout />}>
           <Route index element={<Dashboard />} />
           <Route path="history" element={<DetectionHistory />} />
           {/* Add more nested routes here if needed */}
         </Route>
 
-        {/* Settings Layout */}
-        <Route path="/settings" element={<SettingsLayout />}>
+        {/* Settings Layout - Protected */}
+        <Route path="/settings" element={<ProtectedRoute><SettingsLayout /></ProtectedRoute>}>
           <Route path="profile" element={<ProfileSettings />} />
           <Route path="security" element={<SecuritySettings />} />
         </Route>
