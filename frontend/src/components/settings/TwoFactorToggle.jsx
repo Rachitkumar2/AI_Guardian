@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { ShieldCheck, Loader2 } from 'lucide-react';
+import { apiUrl } from '../../utils/api';
 
 export default function TwoFactorToggle() {
   const [isEnabled, setIsEnabled] = useState(false);
@@ -13,7 +14,7 @@ export default function TwoFactorToggle() {
 
   useEffect(() => {
     // Fetch initial profile to check if 2FA is already enabled
-    fetch('http://localhost:5000/api/profile', { credentials: 'include' })
+    fetch(apiUrl('/api/profile'), { credentials: 'include' })
       .then(res => res.json())
       .then(data => {
         setIsEnabled(data.two_factor_enabled || false);
@@ -37,7 +38,7 @@ export default function TwoFactorToggle() {
     }
 
     try {
-      const res = await fetch('http://localhost:5000/api/security/enable-2fa', {
+      const res = await fetch(apiUrl('/api/security/enable-2fa'), {
         method: 'POST',
         credentials: 'include'
       });
@@ -60,7 +61,7 @@ export default function TwoFactorToggle() {
     setError('');
 
     try {
-      const res = await fetch('http://localhost:5000/api/security/verify-2fa', {
+      const res = await fetch(apiUrl('/api/security/verify-2fa'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

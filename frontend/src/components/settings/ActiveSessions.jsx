@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Laptop, Smartphone, Monitor } from 'lucide-react';
+import { apiUrl } from '../../utils/api';
 
 export default function ActiveSessions() {
   const [sessions, setSessions] = useState([]);
@@ -11,7 +12,7 @@ export default function ActiveSessions() {
 
   const fetchSessions = async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/security/sessions', { credentials: 'include' });
+      const res = await fetch(apiUrl('/api/security/sessions'), { credentials: 'include' });
       if (res.ok) {
         setSessions(await res.json());
       }
@@ -24,7 +25,7 @@ export default function ActiveSessions() {
 
   const logoutOtherSessions = async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/security/logout-other', { 
+      const res = await fetch(apiUrl('/api/security/logout-other'), { 
         method: 'POST',
         credentials: 'include' 
       });

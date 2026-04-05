@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { History } from 'lucide-react';
+import { apiUrl } from '../../utils/api';
 
 export default function LoginHistoryTable() {
   const [history, setHistory] = useState([]);
@@ -8,7 +9,7 @@ export default function LoginHistoryTable() {
   useEffect(() => {
     const fetchHistory = async () => {
       try {
-        const res = await fetch('http://localhost:5000/api/security/login-history', { credentials: 'include' });
+        const res = await fetch(apiUrl('/api/security/login-history'), { credentials: 'include' });
         if (res.ok) {
           setHistory(await res.json());
         }

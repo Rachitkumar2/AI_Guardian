@@ -17,15 +17,22 @@ load_dotenv()
 app = Flask(__name__, static_folder='../frontend/build', static_url_path='')
 
 # CORS with credentials support
-CORS(app, supports_credentials=True, origins=[
+# Build origins list from env var + defaults for local dev
+_allowed_origins = [
     "http://localhost:5173",
     "http://localhost:3000",
     "http://localhost:3001",
     "http://localhost:5000",
     "http://192.168.29.107:3000",
     "http://192.168.29.107:5173",
-    "https://ai-guardian-sigma.vercel.app"
-])
+    "https://ai-guardian-sigma.vercel.app",
+]
+# Add any extra origins from ALLOWED_ORIGINS env var (comma-separated)
+_extra = os.environ.get("ALLOWED_ORIGINS", "")
+if _extra:
+    _allowed_origins.extend([o.strip() for o in _extra.split(",") if o.strip()])
+
+CORS(app, supports_credentials=True, origins=_allowed_origins)
 
 # Ensure uploads directory exists
 os.makedirs("uploads", exist_ok=True)
