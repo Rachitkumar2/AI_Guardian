@@ -3,6 +3,7 @@ import logging
 import torch
 import librosa
 import numpy as np
+from threading import Lock
 
 logger = logging.getLogger(__name__)
 if not logger.handlers:
@@ -27,6 +28,7 @@ MAX_DURATION_SEC = 15  # Handle up to 15 seconds optimally
 model = None
 feature_extractor = None
 fake_class_index = 1
+_model_init_lock = Lock()
 
 
 def _resolve_fake_class_index(id2label):
@@ -43,23 +45,35 @@ def _resolve_fake_class_index(id2label):
     # Fallback to previous behavior if labels are unknown.
     return 1
 
-try:
-    from transformers import AutoModelForAudioClassification, AutoFeatureExtractor
+def _ensure_model_loaded():
+    """Load model lazily to avoid blocking web server startup."""
+    global model, feature_extractor, fake_class_index
 
-    logger.info(f"Loading pretrained model: {MODEL_NAME} ...")
-    feature_extractor = AutoFeatureExtractor.from_pretrained(MODEL_NAME)
-    model = AutoModelForAudioClassification.from_pretrained(MODEL_NAME)
-    model.eval()
-    fake_class_index = _resolve_fake_class_index(model.config.id2label)
-    logger.info(
-        "Model loaded successfully. Labels: %s | fake_class_index=%s",
-        model.config.id2label,
-        fake_class_index,
-    )
-except Exception:
-    model = None
-    feature_extractor = None
-    logger.exception("Failed to load pretrained HuggingFace model.")
+    if model is not None and feature_extractor is not None:
+        return
+
+    with _model_init_lock:
+        if model is not None and feature_extractor is not None:
+            return
+
+        try:
+            from transformers import AutoModelForAudioClassification, AutoFeatureExtractor
+
+            logger.info("Loading pretrained model: %s ...", MODEL_NAME)
+            feature_extractor = AutoFeatureExtractor.from_pretrained(MODEL_NAME)
+            model = AutoModelForAudioClassification.from_pretrained(MODEL_NAME)
+            model.eval()
+            fake_class_index = _resolve_fake_class_index(model.config.id2label)
+            logger.info(
+                "Model loaded successfully. Labels: %s | fake_class_index=%s",
+                model.config.id2label,
+                fake_class_index,
+            )
+        except Exception:
+            model = None
+            feature_extractor = None
+            logger.exception("Failed to load pretrained HuggingFace model.")
+            raise
 
 
 # ---------------------------------------------------------------------------
@@ -171,6 +185,9 @@ def predict_audio(file_path):
     "confidence_level" ("Low"/"Moderate"/"High"), and "signals" (list).
     """
     import noisereduce as nr
+
+    if model is None or feature_extractor is None:
+        _ensure_model_loaded()
 
     if model is None or feature_extractor is None:
         raise RuntimeError("Pretrained model is not loaded. Check logs for errors.")
