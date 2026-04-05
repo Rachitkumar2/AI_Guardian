@@ -1,6 +1,38 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { History, AlertTriangle, CheckCircle2, ShieldAlert, Loader2 } from 'lucide-react';
+import { apiUrl } from '../utils/api';
+
+async function parseApiResponse(res) {
+    const rawText = await res.text();
+    let data = null;
+
+    if (rawText) {
+        try {
+            data = JSON.parse(rawText);
+        } catch {
+            data = null;
+        }
+    }
+
+    return { data, rawText };
+}
+
+function getFriendlyHistoryError(res, data) {
+    if (data?.message || data?.error) {
+        return data.message || data.error;
+    }
+
+    if (res.status === 401) {
+        return 'Your session has expired. Please log in again.';
+    }
+
+    if (res.status >= 500) {
+        return 'History is temporarily unavailable. Please try again in a few seconds.';
+    }
+
+    return 'Unable to load history right now. Please try again.';
+}
 
 export default function DetectionHistory() {
     const [history, setHistory] = useState([]);
@@ -20,18 +52,31 @@ export default function DetectionHistory() {
 
     const fetchHistory = useCallback(async () => {
         try {
-            const res = await fetch('/api/history', {
+            const token = localStorage.getItem('token');
+            const headers = {
+                'Content-Type': 'application/json'
+            };
+
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+
+            const res = await fetch(apiUrl('/api/history'), {
                 method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers,
                 credentials: 'include'
             });
 
-            const data = await res.json();
+            const { data } = await parseApiResponse(res);
+
             if (!res.ok) {
-                throw new Error(data.message || data.error || 'Failed to fetch history');
+                throw new Error(getFriendlyHistoryError(res, data));
             }
+
+            if (!data) {
+                throw new Error('Unexpected server response. Please refresh and try again.');
+            }
+
             setHistory(data.history || []);
         } catch (err) {
             setError(err.message);

@@ -2,12 +2,9 @@ import { useState, useCallback, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Upload, Link as LinkIcon, AlertTriangle, CheckCircle2, Activity, Loader2, History, ShieldCheck, ShieldAlert } from 'lucide-react';
 import { useDropzone } from 'react-dropzone';
+import { apiUrl } from '../utils/api';
 
 const MAX_FREE_SCANS = 2;
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
-  || (window.location.hostname.includes('vercel.app') ? 'https://ai-guardian-uzj8.onrender.com' : '');
-
-const buildApiUrl = (path) => `${API_BASE_URL}${path}`;
 
 async function parseApiResponse(res) {
   const rawText = await res.text();
@@ -77,7 +74,7 @@ export default function Dashboard() {
           headers['Authorization'] = `Bearer ${token}`;
         }
 
-        const res = await fetch(buildApiUrl('/api/free-scan-status'), {
+        const res = await fetch(apiUrl('/api/free-scan-status'), {
           method: 'GET',
           credentials: 'include',
           headers,
@@ -138,7 +135,7 @@ export default function Dashboard() {
         headers['Authorization'] = `Bearer ${token}`;
       }
 
-      const res = await fetch(buildApiUrl('/api/detect'), {
+      const res = await fetch(apiUrl('/api/detect'), {
         method: 'POST',
         credentials: 'include',
         headers,
@@ -226,7 +223,7 @@ export default function Dashboard() {
         headers['Authorization'] = `Bearer ${token}`;
       }
 
-      const res = await fetch(buildApiUrl('/api/detect'), {
+      const res = await fetch(apiUrl('/api/detect'), {
         method: 'POST',
         headers,
         credentials: 'include',

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { User, CheckCircle2 } from 'lucide-react';
+import { apiUrl } from '../../utils/api';
 
 export default function ProfileSettings() {
   const [profile, setProfile] = useState({ name: '', email: '' });
@@ -15,7 +16,7 @@ export default function ProfileSettings() {
         if (token) {
           headers['Authorization'] = 'Bearer ' + token;
         }
-        const response = await fetch('/api/profile', {
+        const response = await fetch(apiUrl('/api/profile'), {
           credentials: 'include',
           headers
         });
@@ -43,7 +44,7 @@ export default function ProfileSettings() {
       if (token) {
         headers['Authorization'] = 'Bearer ' + token;
       }
-      const response = await fetch('/api/profile', {
+      const response = await fetch(apiUrl('/api/profile'), {
         method: 'PUT',
         credentials: 'include',
         headers,

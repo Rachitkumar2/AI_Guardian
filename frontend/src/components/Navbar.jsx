@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Shield, LogOut, Settings, ChevronDown, Menu, X } from 'lucide-react';
+import { apiUrl } from '../utils/api';
 
 export default function Navbar() {
   const location = useLocation();
@@ -46,7 +47,7 @@ export default function Navbar() {
 
   const handleLogout = async () => {
     try {
-      await fetch('/api/logout', { 
+      await fetch(apiUrl('/api/logout'), { 
         method: 'POST',
         credentials: 'include' 
       });

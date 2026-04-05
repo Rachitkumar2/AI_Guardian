@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Shield, ArrowRight, User, Lock, Mail, Eye, EyeOff, CheckCircle2, AudioLines, Activity, BarChart3, ShieldCheck } from 'lucide-react';
 import { useGoogleLogin } from '@react-oauth/google';
+import { apiUrl } from '../utils/api';
 
 const features = [
   { icon: AudioLines, title: 'Audio Detection', desc: 'Identify deepfake audio with high accuracy' },
@@ -87,7 +88,7 @@ export default function Signup() {
     }
 
     try {
-      const response = await fetch('/api/signup', {
+      const response = await fetch(apiUrl('/api/signup'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -122,7 +123,7 @@ export default function Signup() {
       setLoading(true);
 
       try {
-        const response = await fetch('/api/google-login', {
+        const response = await fetch(apiUrl('/api/google-login'), {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

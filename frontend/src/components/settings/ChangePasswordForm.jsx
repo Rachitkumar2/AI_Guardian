@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Key, Eye, EyeOff } from 'lucide-react';
+import { apiUrl } from '../../utils/api';
 
 export default function ChangePasswordForm() {
   const [currentPassword, setCurrentPassword] = useState('');
@@ -30,7 +31,7 @@ export default function ChangePasswordForm() {
 
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('/api/security/change-password', {
+      const res = await fetch(apiUrl('/api/security/change-password'), {
         method: 'POST',
         credentials: 'include',
         headers: { 
