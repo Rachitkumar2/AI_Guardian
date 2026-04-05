@@ -14,6 +14,7 @@ PyJWT
 bcrypt
 python-dotenv
 google-auth
+user-agents
 transformers
 scikit-learn
 noisereduce
