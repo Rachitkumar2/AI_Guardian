@@ -26,6 +26,22 @@ MAX_DURATION_SEC = 15  # Handle up to 15 seconds optimally
 # ---------------------------------------------------------------------------
 model = None
 feature_extractor = None
+fake_class_index = 1
+
+
+def _resolve_fake_class_index(id2label):
+    """Resolve which output index corresponds to fake/synthetic/spoof audio."""
+    if not id2label:
+        return 1
+
+    # Prefer explicit fake-like labels from model metadata.
+    for idx, label in id2label.items():
+        normalized = str(label).strip().lower()
+        if any(token in normalized for token in ["fake", "spoof", "synthetic", "deepfake", "ai"]):
+            return int(idx)
+
+    # Fallback to previous behavior if labels are unknown.
+    return 1
 
 try:
     from transformers import AutoModelForAudioClassification, AutoFeatureExtractor
@@ -34,7 +50,12 @@ try:
     feature_extractor = AutoFeatureExtractor.from_pretrained(MODEL_NAME)
     model = AutoModelForAudioClassification.from_pretrained(MODEL_NAME)
     model.eval()
-    logger.info(f"Model loaded successfully. Labels: {model.config.id2label}")
+    fake_class_index = _resolve_fake_class_index(model.config.id2label)
+    logger.info(
+        "Model loaded successfully. Labels: %s | fake_class_index=%s",
+        model.config.id2label,
+        fake_class_index,
+    )
 except Exception:
     model = None
     feature_extractor = None
@@ -164,8 +185,8 @@ def predict_audio(file_path):
         raise RuntimeError(f"Failed to decode or parse audio file format: {str(e)}")
 
     # 1. Validation & Preprocessing
-    if len(audio) < SAMPLE_RATE * 5.0:
-        raise ValueError("Audio duration too short. Please provide at least 5 to 15 seconds of speaking audio.")
+    if len(audio) < SAMPLE_RATE * 1.0:
+        raise ValueError("Audio duration too short. Please provide at least 1 to 15 seconds of speaking audio.")
 
     # Normalize volume
     audio = librosa.util.normalize(audio)
@@ -198,8 +219,18 @@ def predict_audio(file_path):
         avg_probs = torch.mean(torch.stack(probs_list), dim=0).squeeze(0)
         
         # 3. Threshold Tuning
-        # Index 1 = Fake, Index 0 = Real
-        fake_prob = float(avg_probs[1].item()) * 100  
+        # Resolve fake class index from model labels instead of assuming index 1.
+        if fake_class_index >= avg_probs.shape[0]:
+            logger.warning(
+                "fake_class_index=%s out of range for logits size=%s; falling back to index 1",
+                fake_class_index,
+                avg_probs.shape[0],
+            )
+            idx = 1 if avg_probs.shape[0] > 1 else 0
+        else:
+            idx = fake_class_index
+
+        fake_prob = float(avg_probs[idx].item()) * 100
         
         if fake_prob >= 70.0:
             result = "Fake"
