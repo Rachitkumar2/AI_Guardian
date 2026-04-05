@@ -13,6 +13,7 @@ dnspython
 PyJWT
 bcrypt
 python-dotenv
+google-auth
 transformers
 scikit-learn
 noisereduce
