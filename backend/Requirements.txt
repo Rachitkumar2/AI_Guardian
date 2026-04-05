@@ -4,7 +4,6 @@ gunicorn
 numpy
 librosa
 soundfile
-scipy
 requests
 torch
 torchaudio
@@ -16,5 +15,4 @@ python-dotenv
 google-auth
 user-agents
 transformers
-scikit-learn
 noisereduce
