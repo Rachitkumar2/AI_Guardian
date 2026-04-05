@@ -44,7 +44,12 @@ export default function Dashboard() {
   const [urlInput, setUrlInput] = useState('');
   const [uploadError, setUploadError] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(Boolean(localStorage.getItem('token')));
-  const [guestScansUsed, setGuestScansUsed] = useState(0);
+  
+  // Initialize guest scans from localStorage
+  const [guestScansUsed, setGuestScansUsed] = useState(() => {
+    const saved = localStorage.getItem('guest_scans_used');
+    return saved ? parseInt(saved, 10) : 0;
+  });
 
   useEffect(() => {
     const handleAuthChange = () => {
@@ -54,6 +59,7 @@ export default function Dashboard() {
       if (loggedIn) {
         setUploadError('');
         setGuestScansUsed(0);
+        localStorage.removeItem('guest_scans_used');
       }
     };
 
@@ -65,6 +71,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     const syncFreeScanStatus = async () => {
+      // If already authenticated, the limit doesn't apply to us in the UI
       if (isAuthenticated) return;
 
       try {
@@ -84,13 +91,16 @@ export default function Dashboard() {
 
         const { data } = await parseApiResponse(res);
         if (!data) return;
-        setGuestScansUsed(data?.scans_used ?? 0);
+
+        const count = data?.scans_used ?? 0;
+        setGuestScansUsed(count);
+        localStorage.setItem('guest_scans_used', count.toString());
 
         if (data?.is_locked) {
           setUploadError('You have reached your limit of 2 free scans. Please log in to continue.');
         }
       } catch {
-        // Ignore status fetch failures and rely on detect endpoint enforcement.
+        // Ignore status fetch failures and rely on local scan counts or backend enforcement.
       }
     };
 
@@ -125,6 +135,12 @@ export default function Dashboard() {
     setCurrentResult(null);
     setUploadError('');
 
+    if (!isAuthenticated && guestScansUsed >= MAX_FREE_SCANS) {
+      setUploadError('You have reached your limit of 2 free scans. Please log in to continue.');
+      setIsAnalyzing(false);
+      return;
+    }
+
     const formData = new FormData();
     formData.append('file', file);
 
@@ -158,7 +174,9 @@ export default function Dashboard() {
       }
 
       if (!token) {
-        setGuestScansUsed(data?.scans_used ?? 0);
+        const count = data?.scans_used ?? (guestScansUsed + 1);
+        setGuestScansUsed(count);
+        localStorage.setItem('guest_scans_used', count.toString());
       }
 
       handleAnalysisResult(data, file.name);
@@ -214,6 +232,12 @@ export default function Dashboard() {
     setCurrentResult(null);
     setUploadError('');
 
+    if (!isAuthenticated && guestScansUsed >= MAX_FREE_SCANS) {
+      setUploadError('You have reached your limit of 2 free scans. Please log in to continue.');
+      setIsAnalyzing(false);
+      return;
+    }
+
     try {
       const headers = {
         'Content-Type': 'application/json',
@@ -246,7 +270,9 @@ export default function Dashboard() {
       }
 
       if (!token) {
-        setGuestScansUsed(data?.scans_used ?? 0);
+        const count = data?.scans_used ?? (guestScansUsed + 1);
+        setGuestScansUsed(count);
+        localStorage.setItem('guest_scans_used', count.toString());
       }
 
       // Extract filename from URL or use a default
@@ -315,10 +341,26 @@ export default function Dashboard() {
 
       {/* Main Analysis Column */}
       <div className="flex-1 space-y-8">
-        <div>
-          <h2 className="text-3xl font-bold mb-2">AI Voice Detection</h2>
-          <p className="text-gray-400 text-sm">Upload audio or paste a URL to analyze for deepfake patterns using our neural network.</p>
-        </div>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2">
+            <div>
+              <h2 className="text-3xl font-bold mb-1">AI Voice Detection</h2>
+              <p className="text-gray-400 text-sm">Upload audio or paste a URL to analyze for deepfake patterns using our neural network.</p>
+            </div>
+            {!isAuthenticated && (
+              <div className="bg-[#1C2A22] border border-neon-green/20 px-4 py-2 rounded-xl flex items-center gap-3 self-start sm:self-center">
+                <div className="text-xs font-bold text-gray-400 uppercase tracking-widest">Free Scans</div>
+                <div className="flex gap-1.5">
+                  {[...Array(MAX_FREE_SCANS)].map((_, i) => (
+                    <div 
+                      key={i} 
+                      className={`w-3 h-3 rounded-full border ${i < guestScansUsed ? 'bg-red-500 border-red-500 shadow-[0_0_8px_#ef4444]' : 'bg-transparent border-gray-600'}`}
+                      title={i < guestScansUsed ? "Scan Used" : "Scan Available"}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
 
         {uploadError && (
           <div className="p-4 bg-red-500/10 border border-red-500/50 rounded-xl flex items-start gap-3 text-red-400 animate-slide-down">
