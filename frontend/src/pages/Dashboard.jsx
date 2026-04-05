@@ -4,6 +4,41 @@ import { Upload, Link as LinkIcon, AlertTriangle, CheckCircle2, Activity, Loader
 import { useDropzone } from 'react-dropzone';
 
 const MAX_FREE_SCANS = 2;
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
+  || (window.location.hostname.includes('vercel.app') ? 'https://ai-guardian-uzj8.onrender.com' : '');
+
+const buildApiUrl = (path) => `${API_BASE_URL}${path}`;
+
+async function parseApiResponse(res) {
+  const rawText = await res.text();
+  let data = null;
+
+  if (rawText) {
+    try {
+      data = JSON.parse(rawText);
+    } catch {
+      data = null;
+    }
+  }
+
+  return { data, rawText };
+}
+
+function getFriendlyApiError(res, data, fallback) {
+  if (data?.message || data?.error) {
+    return data.message || data.error;
+  }
+
+  if (res.status >= 500) {
+    return 'Server is temporarily unavailable. Please try again in a few seconds.';
+  }
+
+  if (res.status === 0) {
+    return 'Network error. Please check your connection and try again.';
+  }
+
+  return fallback;
+}
 
 export default function Dashboard() {
   const [recentResults, setRecentResults] = useState([]);
@@ -42,7 +77,7 @@ export default function Dashboard() {
           headers['Authorization'] = `Bearer ${token}`;
         }
 
-        const res = await fetch('/api/free-scan-status', {
+        const res = await fetch(buildApiUrl('/api/free-scan-status'), {
           method: 'GET',
           credentials: 'include',
           headers,
@@ -50,7 +85,8 @@ export default function Dashboard() {
 
         if (!res.ok) return;
 
-        const data = await res.json();
+        const { data } = await parseApiResponse(res);
+        if (!data) return;
         setGuestScansUsed(data?.scans_used ?? 0);
 
         if (data?.is_locked) {
@@ -102,20 +138,25 @@ export default function Dashboard() {
         headers['Authorization'] = `Bearer ${token}`;
       }
 
-      const res = await fetch('/api/detect', {
+      const res = await fetch(buildApiUrl('/api/detect'), {
         method: 'POST',
         credentials: 'include',
         headers,
         body: formData,
       });
 
-      const data = await res.json();
+      const { data } = await parseApiResponse(res);
 
       if (!res.ok) {
         if (data?.error === 'limit_reached') {
           setGuestScansUsed(data?.scans_used ?? MAX_FREE_SCANS);
         }
-        setUploadError(data.message || data.error || 'Failed to analyze audio');
+        setUploadError(getFriendlyApiError(res, data, 'Failed to analyze audio'));
+        return;
+      }
+
+      if (!data) {
+        setUploadError('Unexpected server response. Please try again.');
         return;
       }
 
@@ -185,20 +226,25 @@ export default function Dashboard() {
         headers['Authorization'] = `Bearer ${token}`;
       }
 
-      const res = await fetch('/api/detect', {
+      const res = await fetch(buildApiUrl('/api/detect'), {
         method: 'POST',
         headers,
         credentials: 'include',
         body: JSON.stringify({ url: urlInput }),
       });
 
-      const data = await res.json();
+      const { data } = await parseApiResponse(res);
 
       if (!res.ok) {
         if (data?.error === 'limit_reached') {
           setGuestScansUsed(data?.scans_used ?? MAX_FREE_SCANS);
         }
-        setUploadError(data.message || data.error || 'Failed to analyze URL');
+        setUploadError(getFriendlyApiError(res, data, 'Failed to analyze URL'));
+        return;
+      }
+
+      if (!data) {
+        setUploadError('Unexpected server response. Please try again.');
         return;
       }
 
