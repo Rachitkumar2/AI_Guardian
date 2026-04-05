@@ -346,20 +346,6 @@ export default function Dashboard() {
               <h2 className="text-3xl font-bold mb-1">AI Voice Detection</h2>
               <p className="text-gray-400 text-sm">Upload audio or paste a URL to analyze for deepfake patterns using our neural network.</p>
             </div>
-            {!isAuthenticated && (
-              <div className="bg-[#1C2A22] border border-neon-green/20 px-4 py-2 rounded-xl flex items-center gap-3 self-start sm:self-center">
-                <div className="text-xs font-bold text-gray-400 uppercase tracking-widest">Free Scans</div>
-                <div className="flex gap-1.5">
-                  {[...Array(MAX_FREE_SCANS)].map((_, i) => (
-                    <div 
-                      key={i} 
-                      className={`w-3 h-3 rounded-full border ${i < guestScansUsed ? 'bg-red-500 border-red-500 shadow-[0_0_8px_#ef4444]' : 'bg-transparent border-gray-600'}`}
-                      title={i < guestScansUsed ? "Scan Used" : "Scan Available"}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
 
         {uploadError && (
