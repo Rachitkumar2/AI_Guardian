@@ -1,31 +1,34 @@
-# Use a standard full Python image (more stable than slim for this)
-FROM python:3.11
+# Use a slim Python image for efficiency
+FROM python:3.11-slim
 
 # Install system dependencies for audio processing
 RUN apt-get update && apt-get install -y \
     ffmpeg \
     libsndfile1 \
-    libsndfile1-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Set working directory inside the container
-WORKDIR /app
+# Set up a new user named "user" with user id 1000
+RUN useradd -m -u 1000 user
+USER user
+ENV HOME=/home/user \
+    PATH=/home/user/.local/bin:$PATH
 
-# Copy the requirements file first
-COPY requirements.txt .
+# Set working directory to user home
+WORKDIR $HOME/app
 
-# Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+# Copy the requirements file first and install dependencies
+COPY --chown=user requirements.txt .
+RUN pip install --no-cache-dir --user -r requirements.txt
 
-# Copy the rest of the backend folder into the container
-COPY . .
+# Copy the rest of the application code
+COPY --chown=user . .
 
 # Ensure environment variables are set
 ENV PYTHONUNBUFFERED=1
-ENV PORT=8080
+ENV PORT=7860
 
-# The app listens on port 8080
-EXPOSE 8080
+# The app listens on port 7860 for Hugging Face
+EXPOSE 7860
 
-# Start gunicorn
-CMD ["gunicorn", "app:app", "--bind", "0.0.0.0:8080", "--timeout", "300", "--workers", "1", "--threads", "2"]
+# Start the application using Gunicorn
+CMD ["gunicorn", "app:app", "--bind", "0.0.0.0:7860", "--timeout", "300", "--workers", "1", "--threads", "2"]
