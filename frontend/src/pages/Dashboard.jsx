@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import { Upload, Link as LinkIcon, AlertTriangle, CheckCircle2, Activity, Loader2, History, ShieldCheck, ShieldAlert } from 'lucide-react';
 import { useDropzone } from 'react-dropzone';
 
+const MAX_FREE_SCANS = 2;
+
 export default function Dashboard() {
   const [recentResults, setRecentResults] = useState([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -10,14 +12,16 @@ export default function Dashboard() {
   const [urlInput, setUrlInput] = useState('');
   const [uploadError, setUploadError] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(Boolean(localStorage.getItem('token')));
+  const [guestScansUsed, setGuestScansUsed] = useState(0);
 
   useEffect(() => {
     const handleAuthChange = () => {
       const loggedIn = Boolean(localStorage.getItem('token'));
       setIsAuthenticated(loggedIn);
 
-      if (loggedIn && uploadError.includes('limit of 2 free scans')) {
+      if (loggedIn) {
         setUploadError('');
+        setGuestScansUsed(0);
       }
     };
 
@@ -25,7 +29,63 @@ export default function Dashboard() {
     window.addEventListener('authChange', handleAuthChange);
 
     return () => window.removeEventListener('authChange', handleAuthChange);
-  }, [uploadError]);
+  }, []);
+
+  useEffect(() => {
+    const syncFreeScanStatus = async () => {
+      if (isAuthenticated) return;
+
+      try {
+        const headers = {};
+        const token = localStorage.getItem('token');
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
+        }
+
+        const res = await fetch('/api/free-scan-status', {
+          method: 'GET',
+          credentials: 'include',
+          headers,
+        });
+
+        if (!res.ok) return;
+
+        const data = await res.json();
+        setGuestScansUsed(data?.scans_used ?? 0);
+
+        if (data?.is_locked) {
+          setUploadError('You have reached your limit of 2 free scans. Please log in to continue.');
+        }
+      } catch {
+        // Ignore status fetch failures and rely on detect endpoint enforcement.
+      }
+    };
+
+    syncFreeScanStatus();
+  }, [isAuthenticated]);
+
+  // Common logic to process the result from the backend
+  const handleAnalysisResult = (data, filename) => {
+    const confidenceRaw = data.confidence || 0;
+    const confidencePercent = Math.round(confidenceRaw <= 1 ? confidenceRaw * 100 : confidenceRaw);
+    const isFake = data.result?.toLowerCase() === 'fake';
+    const isUncertain = data.result?.toLowerCase() === 'uncertain';
+
+    const newResult = {
+      filename: filename,
+      time: 'Just now',
+      result: `${confidencePercent}% ${isFake ? 'Synthetic' : isUncertain ? 'Uncertain' : 'Natural'}`,
+      status: isFake ? 'FAKE' : isUncertain ? 'UNCERTAIN' : 'REAL',
+      isFake: isFake,
+      isUncertain: isUncertain,
+      confidence: confidencePercent,
+      confidenceLevel: data.confidence_level || 'Unknown',
+      signals: data.signals || [],
+    };
+
+    setCurrentResult(newResult);
+    setRecentResults(prev => [newResult, ...prev]);
+  };
 
   const handleFileUpload = async (file) => {
     setIsAnalyzing(true);
@@ -36,68 +96,126 @@ export default function Dashboard() {
     formData.append('file', file);
 
     try {
+      const headers = {};
+      const token = localStorage.getItem('token');
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       const res = await fetch('/api/detect', {
         method: 'POST',
         credentials: 'include',
+        headers,
         body: formData,
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.message || data.error || 'Failed to analyze audio');
+        if (data?.error === 'limit_reached') {
+          setGuestScansUsed(data?.scans_used ?? MAX_FREE_SCANS);
+        }
+        setUploadError(data.message || data.error || 'Failed to analyze audio');
+        return;
       }
 
-      const confidenceRaw = data.confidence || 0;
-      const confidencePercent = Math.round(confidenceRaw <= 1 ? confidenceRaw * 100 : confidenceRaw);
-      const isFake = data.result?.toLowerCase() === 'fake';
-      const isUncertain = data.result?.toLowerCase() === 'uncertain';
+      if (!token) {
+        setGuestScansUsed(data?.scans_used ?? 0);
+      }
 
-      const newResult = {
-        filename: file.name,
-        time: 'Just now',
-        result: `${confidencePercent}% ${isFake ? 'Synthetic' : isUncertain ? 'Uncertain' : 'Natural'}`,
-        status: isFake ? 'FAKE' : isUncertain ? 'UNCERTAIN' : 'REAL',
-        isFake: isFake,
-        isUncertain: isUncertain,
-        confidence: confidencePercent,
-        confidenceLevel: data.confidence_level || 'Unknown',
-        signals: data.signals || [],
-      };
-
-      setCurrentResult(newResult);
-      setRecentResults(prev => [newResult, ...prev]);
+      handleAnalysisResult(data, file.name);
 
     } catch (error) {
       console.error('Error uploading file:', error);
-      setUploadError(error.message);
+      setUploadError(error.message || 'An unexpected error occurred. Please try again.');
     } finally {
       setIsAnalyzing(false);
     }
   };
 
-  const onDrop = useCallback((acceptedFiles) => {
+  const onDrop = useCallback((acceptedFiles, fileRejections) => {
+    if (fileRejections.length > 0) {
+      const error = fileRejections[0].errors[0];
+      if (error.code === 'file-invalid-type') {
+        setUploadError('Invalid file type. Please upload an MP3, WAV, or M4A file.');
+      } else if (error.code === 'file-too-large') {
+        setUploadError('File is too large. Max size is 10MB.');
+      } else {
+        setUploadError(error.message);
+      }
+      return;
+    }
+
     if (acceptedFiles.length > 0) {
       handleFileUpload(acceptedFiles[0]);
     }
   }, []);
 
+  const isFreeTrialLocked = !isAuthenticated && guestScansUsed >= MAX_FREE_SCANS;
+  const isUploadDisabled = !isAuthenticated && isFreeTrialLocked;
+
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: {
-      'audio/*': ['.mp3', '.wav', '.m4a']
+      'audio/mpeg': ['.mp3'],
+      'audio/wav': ['.wav'],
+      'audio/x-wav': ['.wav'],
+      'audio/mp4': ['.m4a'],
+      'audio/x-m4a': ['.m4a'],
+      'audio/*': []
     },
     maxFiles: 1,
-    disabled: !isAuthenticated && uploadError.includes('limit of 2 free scans')
+    maxSize: 10 * 1024 * 1024, // 10MB
+    disabled: isUploadDisabled
   });
 
-  const isFreeTrialLocked = uploadError.includes('limit of 2 free scans');
-  const isUploadDisabled = !isAuthenticated && isFreeTrialLocked;
+  const handleUrlAnalyze = async () => {
+    if (!urlInput.trim()) return;
 
-  const handleUrlAnalyze = () => {
-    if (urlInput.trim()) {
-      alert("URL analysis is not yet implemented in the backend, but this is where it would plug in!");
+    setIsAnalyzing(true);
+    setCurrentResult(null);
+    setUploadError('');
+
+    try {
+      const headers = {
+        'Content-Type': 'application/json',
+      };
+      const token = localStorage.getItem('token');
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      const res = await fetch('/api/detect', {
+        method: 'POST',
+        headers,
+        credentials: 'include',
+        body: JSON.stringify({ url: urlInput }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        if (data?.error === 'limit_reached') {
+          setGuestScansUsed(data?.scans_used ?? MAX_FREE_SCANS);
+        }
+        setUploadError(data.message || data.error || 'Failed to analyze URL');
+        return;
+      }
+
+      if (!token) {
+        setGuestScansUsed(data?.scans_used ?? 0);
+      }
+
+      // Extract filename from URL or use a default
+      const urlFilename = urlInput.split('/').pop().split('?')[0] || 'Remote Audio';
+      handleAnalysisResult(data, urlFilename);
       setUrlInput('');
+
+    } catch (error) {
+      console.error('Error analyzing URL:', error);
+      setUploadError(error.message || 'An unexpected error occurred. Please try again.');
+    } finally {
+      setIsAnalyzing(false);
     }
   };
 
@@ -218,38 +336,49 @@ export default function Dashboard() {
               </div>
             )}
 
-            {/* OR Divider */}
-            <div className="flex items-center gap-4 py-2">
-              <div className="flex-1 h-px bg-[#1C2A22]"></div>
-              <div className="text-xs font-bold text-gray-500 uppercase tracking-widest">OR</div>
-              <div className="flex-1 h-px bg-[#1C2A22]"></div>
-            </div>
+            {/* OR Divider & URL/Analyze Section */}
+            {!isUploadDisabled && (
+              <>
+                {/* OR Divider */}
+                <div className="flex items-center gap-4 py-2">
+                  <div className="flex-1 h-px bg-[#1C2A22]"></div>
+                  <div className="text-xs font-bold text-gray-500 uppercase tracking-widest">OR</div>
+                  <div className="flex-1 h-px bg-[#1C2A22]"></div>
+                </div>
 
-            {/* URL Input */}
-            <div>
-              <label className="block text-sm font-semibold mb-2 text-gray-300">Paste Audio URL</label>
-              <div className="flex bg-[#121A15] border border-[#1C2A22] rounded-lg overflow-hidden focus-within:border-neon-green/50 transition-colors">
-                <input
-                  type="text"
-                  value={urlInput}
-                  onChange={(e) => setUrlInput(e.target.value)}
-                  placeholder="https://youtube.com/watch?v=..."
-                  className="flex-1 bg-transparent px-4 py-3 text-sm focus:outline-none"
-                />
-                <button className="bg-[#1C2A22] px-4 flex items-center justify-center hover:bg-[#2A3F33] transition-colors">
-                  <LinkIcon className="w-5 h-5 text-neon-green" />
+                {/* URL Input */}
+                <div>
+                  <label className="block text-sm font-semibold mb-2 text-gray-300">Paste Audio URL</label>
+                  <div className="flex bg-[#121A15] border border-[#1C2A22] rounded-lg overflow-hidden focus-within:border-neon-green/50 transition-colors">
+                    <input
+                      type="text"
+                      value={urlInput}
+                      onChange={(e) => setUrlInput(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleUrlAnalyze()}
+                      placeholder="https://example.com/audio.mp3"
+                      className="flex-1 bg-transparent px-4 py-3 text-sm focus:outline-none"
+                    />
+                    <button 
+                      onClick={handleUrlAnalyze}
+                      disabled={!urlInput.trim() || isAnalyzing}
+                      className="bg-[#1C2A22] px-4 flex items-center justify-center hover:bg-[#2A3F33] transition-colors disabled:opacity-50"
+                      title="Analyze URL"
+                    >
+                      <LinkIcon className="w-5 h-5 text-neon-green" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Analyze Button */}
+                <button
+                  onClick={handleUrlAnalyze}
+                  disabled={!urlInput.trim() || isAnalyzing}
+                  className="w-full bg-neon-green text-black py-4 rounded-xl font-black text-lg hover:bg-neon-green-hover disabled:opacity-50 disabled:hover:bg-neon-green transition-all shadow-[0_0_30px_rgba(0,255,102,0.3)] hover:shadow-[0_0_40px_rgba(0,255,102,0.5)] disabled:hover:shadow-[0_0_30px_rgba(0,255,102,0.3)]"
+                >
+                  {isAnalyzing ? "ANALYZING..." : "ANALYZE AUDIO URL"}
                 </button>
-              </div>
-            </div>
-
-            {/* Analyze Button */}
-            <button
-              onClick={() => setUploadError("URL analysis is currently under development. Please upload an audio file instead.")}
-              disabled={!urlInput.trim()}
-              className="w-full bg-neon-green text-black py-4 rounded-xl font-black text-lg hover:bg-neon-green-hover disabled:opacity-50 disabled:hover:bg-neon-green transition-all shadow-[0_0_30px_rgba(0,255,102,0.3)] hover:shadow-[0_0_40px_rgba(0,255,102,0.5)] disabled:hover:shadow-[0_0_30px_rgba(0,255,102,0.3)]"
-            >
-              ANALYZE AUDIO URL
-            </button>
+              </>
+            )}
           </div>
         ) : (
           <div className="pt-2 animate-in fade-in slide-in-from-bottom-4 duration-500">

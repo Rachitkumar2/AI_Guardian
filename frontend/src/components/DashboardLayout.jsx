@@ -22,6 +22,7 @@ export default function DashboardLayout() {
       if (stored) {
         try { setUser(JSON.parse(stored)); } catch { setUser(null); }
       } else {
+        localStorage.removeItem('token');
         setUser(null);
       }
     };
@@ -60,6 +61,7 @@ export default function DashboardLayout() {
       console.error('Logout request failed:', err);
     }
     localStorage.removeItem('user');
+    localStorage.removeItem('token');
     window.dispatchEvent(new Event('authChange'));
     navigate('/');
   };
