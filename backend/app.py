@@ -23,7 +23,8 @@ CORS(app, supports_credentials=True, origins=[
     "http://localhost:3001",
     "http://localhost:5000",
     "http://192.168.29.107:3000",
-    "http://192.168.29.107:5173"
+    "http://192.168.29.107:5173",
+    "https://ai-guardian-sigma.vercel.app"
 ])
 
 # Ensure uploads directory exists
