@@ -12,17 +12,12 @@ def _normalize_user_id(user_id):
 
 
 def _build_guest_selector(guest_id=None, guest_ip=None):
-    filters = []
+    # Prefer stable guest_id identity and only use IP as a fallback.
     if guest_id:
-        filters.append({"guest_id": guest_id})
+        return {"guest_id": guest_id}
     if guest_ip:
-        filters.append({"guest_ip": guest_ip})
-
-    if not filters:
-        return None
-    if len(filters) == 1:
-        return filters[0]
-    return {"$or": filters}
+        return {"guest_ip": guest_ip}
+    return None
 
 
 def _build_selector(guest_id=None, user_id=None, guest_ip=None):
