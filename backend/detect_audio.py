@@ -110,11 +110,10 @@ def _extract_signal_features(audio, sr=SAMPLE_RATE):
         return None
 
 
-def _compute_detection_signals(sig_feats, is_fake, confidence):
+def _compute_detection_signals(sig_feats):
     """
     Compute UI-friendly detection signals from spectral features.
-    These provide a human-readable breakdown accompanying the model's prediction.
-    ``is_fake`` should be a boolean (True if the model predicted Fake).
+    These now reflect REAL physical measurements of the audio, independent of the model's verdict.
     """
     if sig_feats is None:
         return [
@@ -124,39 +123,28 @@ def _compute_detection_signals(sig_feats, is_fake, confidence):
             {"name": "Signal Consistency", "score": 50.0},
         ]
 
-
     # 1. MFCC Spectral Consistency
-    mfcc_std_mag = float(np.mean(np.abs(sig_feats["mfcc_std"])))
-    mfcc_consistency = min(100, max(0, 100 - mfcc_std_mag * 3))
-    if is_fake:
-        mfcc_consistency = max(20, min(95, 100 - mfcc_consistency + np.random.uniform(-5, 5)))
+    # Typical vocal speech has MFCC std between 10-30. Higher indicates jitter or synthetic artifacts.
+    mfcc_std_avg = float(np.mean(sig_feats["mfcc_std"]))
+    mfcc_consistency = max(0, min(100, 100 - (mfcc_std_avg * 1.5)))
 
     # 2. Spectrogram Artifact Detection
-    artifact_raw = (sig_feats["spectral_rolloff"] / 8000.0) * 50 + \
-                   (float(np.mean(np.abs(sig_feats["spectral_contrast"]))) / 30.0) * 50
-    artifact_score = min(100, max(0, artifact_raw))
-    if is_fake:
-        artifact_score = max(60, min(98, artifact_score + confidence * 0.3))
-    else:
-        artifact_score = max(5, min(35, artifact_score * 0.3))
+    # High rolloff and high contrast variance often indicate digital "harshness" or synthetic generation.
+    contrast_avg = float(np.mean(sig_feats["spectral_contrast"]))
+    rolloff_norm = sig_feats["spectral_rolloff"] / 8000.0
+    artifact_raw = (rolloff_norm * 40) + (contrast_avg / 30.0 * 60)
+    artifact_score = max(0, min(100, artifact_raw))
 
     # 3. Prosody Pattern Analysis
-    chroma_variance = float(np.std(sig_feats["chroma"]))
-    prosody_raw = chroma_variance * 40 + sig_feats["zcr"] * 300
-    prosody_score = min(100, max(0, prosody_raw))
-    if is_fake:
-        prosody_score = max(50, min(95, prosody_score + confidence * 0.2))
-    else:
-        prosody_score = max(5, min(30, prosody_score * 0.25))
+    # Chroma variance captures the "musicality" or frame-to-frame harmonic jitter.
+    chroma_var = float(np.std(sig_feats["chroma"]))
+    prosody_score = max(0, min(100, chroma_var * 400 + sig_feats["zcr"] * 100))
 
     # 4. Signal Consistency
-    consistency_raw = (sig_feats["rms"] * 500) * 0.5 + \
-                      (sig_feats["spectral_bandwidth"] / 4000.0) * 50
-    signal_consistency = min(100, max(0, consistency_raw))
-    if is_fake:
-        signal_consistency = max(15, min(45, signal_consistency * 0.4))
-    else:
-        signal_consistency = max(70, min(98, signal_consistency + 60))
+    # RMS (volume) and Bandwidth. Synthetic audio often has "flat" or overly uniform bandwidth.
+    bandwidth_norm = sig_feats["spectral_bandwidth"] / 4000.0
+    consistency_raw = (sig_feats["rms"] * 200) + (bandwidth_norm * 50)
+    signal_consistency = max(0, min(100, consistency_raw))
 
     return [
         {"name": "MFCC Spectral Consistency", "score": round(mfcc_consistency, 1)},
@@ -208,8 +196,8 @@ def predict_audio(file_path):
     # Normalize volume
     audio = librosa.util.normalize(audio)
     
-    # Apply noise reduction to remove background static
-    audio = nr.reduce_noise(y=audio, sr=SAMPLE_RATE, prop_decrease=0.8)
+    # Apply noise reduction to remove background static (lowered to preserve AI cues)
+    audio = nr.reduce_noise(y=audio, sr=SAMPLE_RATE, prop_decrease=0.45)
 
     # Extract UI features (independent of model)
     sig_feats = _extract_signal_features(audio, sr=SAMPLE_RATE)
@@ -249,10 +237,10 @@ def predict_audio(file_path):
 
         fake_prob = float(avg_probs[idx].item()) * 100
         
-        if fake_prob >= 70.0:
+        if fake_prob >= 65.0:
             result = "Fake"
             base_confidence = fake_prob
-        elif fake_prob >= 40.0:
+        elif fake_prob >= 35.0:
             result = "Uncertain"
             base_confidence = fake_prob
         else:
@@ -261,13 +249,13 @@ def predict_audio(file_path):
 
         # 4. Ensemble Method Hybrid (Manual Spectral Correlators overriding Uncertain boundary logic)
         if result == "Uncertain" and sig_feats:
-            artifact_raw = (sig_feats["spectral_rolloff"] / 8000.0) * 50
-            if artifact_raw > 75.0:
+            artifact_norm = (sig_feats["spectral_rolloff"] / 8000.0) * 100
+            if artifact_norm > 80.0:
                 result = "Fake"
-                base_confidence = 72.0  # Just pushed over the edge via ensemble
+                base_confidence = 68.0  # Just pushed over the edge via ensemble
 
         confidence_rounded = round(base_confidence, 2)
-        signals = _compute_detection_signals(sig_feats, result == "Fake", confidence_rounded)
+        signals = _compute_detection_signals(sig_feats)
 
         return {
             "result": result,
