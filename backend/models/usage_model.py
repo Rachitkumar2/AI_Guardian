@@ -76,7 +76,7 @@ def increment_usage(guest_id=None, user_id=None, guest_ip=None):
     update_doc = {
         "$inc": {"scans_used": 1},
         "$set": {"updated_at": now},
-        "$setOnInsert": {"created_at": now, "scans_used": 0},
+        "$setOnInsert": {"created_at": now},
     }
 
     if normalized_user_id:
