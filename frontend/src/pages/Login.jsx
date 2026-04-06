@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Shield, ArrowRight, User, Lock, Eye, EyeOff, CheckCircle2, AudioLines, Activity, BarChart3, ShieldCheck } from 'lucide-react';
 import { useGoogleLogin } from '@react-oauth/google';
 import { apiUrl } from '../utils/api';
+import { getGuestId } from '../utils/guest';
 
 const features = [
   { icon: AudioLines, title: 'Audio Detection', desc: 'Identify deepfake audio with high accuracy' },
@@ -71,7 +72,7 @@ export default function Login() {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, guest_id: getGuestId() }),
       });
 
       const data = await response.json();
@@ -107,7 +108,7 @@ export default function Login() {
             'Content-Type': 'application/json',
           },
           credentials: 'include',
-          body: JSON.stringify({ access_token: tokenResponse.access_token }),
+          body: JSON.stringify({ access_token: tokenResponse.access_token, guest_id: getGuestId() }),
         });
 
         const data = await response.json();

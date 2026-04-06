@@ -7,6 +7,7 @@ from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
 from auth.jwt_utils import generate_token
 from config.db import users_collection
+from models.usage_model import merge_guest_usage_into_user
 from models.session_model import create_session, log_login_attempt
 from user_agents import parse
 from dotenv import load_dotenv
@@ -14,6 +15,12 @@ from dotenv import load_dotenv
 load_dotenv()
 
 auth_bp = Blueprint("auth", __name__)
+
+
+def _extract_guest_id(data=None):
+    if data and data.get("guest_id"):
+        return data.get("guest_id")
+    return request.headers.get("X-Guest-Id") or request.cookies.get("guest_id")
 
 @auth_bp.route("/api/signup", methods=["POST"])
 def signup():
@@ -43,6 +50,16 @@ def signup():
             "created_at": datetime.utcnow()
         }
         result = users_collection.insert_one(user_doc)
+        guest_id = _extract_guest_id(data)
+
+        try:
+            merge_guest_usage_into_user(
+                guest_id=guest_id,
+                user_id=str(result.inserted_id),
+                guest_ip=request.headers.get("X-Forwarded-For", request.remote_addr),
+            )
+        except Exception:
+            current_app.logger.exception("Failed to merge guest usage into new account")
 
         # Generate JWT token
         token = generate_token({"_id": result.inserted_id, "email": email})
@@ -98,6 +115,8 @@ def login():
 
     try:
         user = users_collection.find_one({"email": email})
+        guest_id = _extract_guest_id(data)
+        guest_ip = request.headers.get("X-Forwarded-For", request.remote_addr)
 
         if not user:
             log_login_attempt(email, request.headers.get("X-Forwarded-For", request.remote_addr), request.headers.get("User-Agent", ""), "Unknown", "Failed")
@@ -122,6 +141,15 @@ def login():
             
             session_id = create_session(user["_id"], ip, browser, device)
             log_login_attempt(user["_id"], ip, browser, device, "Success")
+
+            try:
+                merge_guest_usage_into_user(
+                    guest_id=guest_id,
+                    user_id=str(user["_id"]),
+                    guest_ip=guest_ip,
+                )
+            except Exception:
+                current_app.logger.exception("Failed to merge guest usage into login account")
             
             # Generate JWT token with session_id
             user_payload = dict(user)
@@ -177,6 +205,7 @@ def google_login():
     try:
         email = None
         name = None
+        guest_id = _extract_guest_id(data)
         
         if access_token:
             try:
@@ -249,6 +278,15 @@ def google_login():
         
         session_id = create_session(user_id, ip, browser, device)
         log_login_attempt(user_id, ip, browser, device, "Success")
+
+        try:
+            merge_guest_usage_into_user(
+                guest_id=guest_id,
+                user_id=user_id,
+                guest_ip=ip,
+            )
+        except Exception:
+            current_app.logger.exception("Failed to merge guest usage into Google account")
 
         # Generate JWT token
         user_payload = {"_id": user_id, "email": email, "session_id": session_id}

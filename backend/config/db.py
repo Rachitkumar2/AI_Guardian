@@ -24,6 +24,9 @@ users_collection = db["users"]
 sessions_collection = db["sessions"]
 login_history_collection = db["login_history"]
 detections_collection = db["detections"]
+usage_collection = db["users_usage"]
 
 # Create unique index on email
 users_collection.create_index("email", unique=True)
+usage_collection.create_index("guest_id", unique=True, sparse=True)
+usage_collection.create_index("user_id", unique=True, sparse=True)

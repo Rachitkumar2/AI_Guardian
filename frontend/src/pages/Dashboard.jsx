@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Upload, Link as LinkIcon, AlertTriangle, CheckCircle2, Activity, Loader2, History, ShieldCheck, ShieldAlert } from 'lucide-react';
 import { useDropzone } from 'react-dropzone';
 import { apiUrl } from '../utils/api';
+import { getGuestId, setGuestId } from '../utils/guest';
 
 const MAX_FREE_SCANS = 2;
 
@@ -52,6 +53,8 @@ export default function Dashboard() {
   });
 
   useEffect(() => {
+    getGuestId();
+
     const handleAuthChange = () => {
       const loggedIn = Boolean(localStorage.getItem('token'));
       setIsAuthenticated(loggedIn);
@@ -80,6 +83,7 @@ export default function Dashboard() {
         if (token) {
           headers['Authorization'] = `Bearer ${token}`;
         }
+        headers['X-Guest-Id'] = getGuestId();
 
         const res = await fetch(apiUrl('/api/free-scan-status'), {
           method: 'GET',
@@ -91,6 +95,10 @@ export default function Dashboard() {
 
         const { data } = await parseApiResponse(res);
         if (!data) return;
+
+        if (data.guest_id) {
+          setGuestId(data.guest_id);
+        }
 
         const count = data?.scans_used ?? 0;
         setGuestScansUsed(count);
@@ -143,6 +151,7 @@ export default function Dashboard() {
 
     const formData = new FormData();
     formData.append('file', file);
+    formData.append('guest_id', getGuestId());
 
     try {
       const headers = {};
@@ -164,6 +173,9 @@ export default function Dashboard() {
         if (data?.error === 'limit_reached') {
           setGuestScansUsed(data?.scans_used ?? MAX_FREE_SCANS);
         }
+        if (data?.guest_id) {
+          setGuestId(data.guest_id);
+        }
         setUploadError(getFriendlyApiError(res, data, 'Failed to analyze audio'));
         return;
       }
@@ -171,6 +183,10 @@ export default function Dashboard() {
       if (!data) {
         setUploadError('Unexpected server response. Please try again.');
         return;
+      }
+
+      if (data.guest_id) {
+        setGuestId(data.guest_id);
       }
 
       if (!token) {
@@ -246,12 +262,13 @@ export default function Dashboard() {
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
       }
+      headers['X-Guest-Id'] = getGuestId();
 
       const res = await fetch(apiUrl('/api/detect'), {
         method: 'POST',
         headers,
         credentials: 'include',
-        body: JSON.stringify({ url: urlInput }),
+        body: JSON.stringify({ url: urlInput, guest_id: getGuestId() }),
       });
 
       const { data } = await parseApiResponse(res);
@@ -260,6 +277,9 @@ export default function Dashboard() {
         if (data?.error === 'limit_reached') {
           setGuestScansUsed(data?.scans_used ?? MAX_FREE_SCANS);
         }
+        if (data?.guest_id) {
+          setGuestId(data.guest_id);
+        }
         setUploadError(getFriendlyApiError(res, data, 'Failed to analyze URL'));
         return;
       }
@@ -267,6 +287,10 @@ export default function Dashboard() {
       if (!data) {
         setUploadError('Unexpected server response. Please try again.');
         return;
+      }
+
+      if (data.guest_id) {
+        setGuestId(data.guest_id);
       }
 
       if (!token) {
@@ -370,7 +394,7 @@ export default function Dashboard() {
             {/* Upload Container */}
             {isUploadDisabled ? (
               <div className="border border-red-500/40 bg-red-500/5 border-dashed rounded-2xl p-6 md:p-10 flex flex-col items-center justify-center text-center opacity-80">
-                <div className="w-14 h-14 bg-[#1C2A22] rounded-full flex items-center justify-center mb-6">
+                <div className="w-14 h-14 bg-dark-border rounded-full flex items-center justify-center mb-6">
                   <Upload className="w-6 h-6 text-neon-green" />
                 </div>
                 <h3 className="text-xl font-bold mb-2">Free Scans Exhausted</h3>
@@ -387,11 +411,11 @@ export default function Dashboard() {
             ) : (
               <div
                 {...getRootProps()}
-                className={`border ${isDragActive ? 'border-neon-green bg-neon-green/5' : 'border-[#1C2A22] bg-[#121A15]'} border-dashed rounded-2xl p-6 md:p-10 flex flex-col items-center justify-center text-center hover:border-neon-green/50 cursor-pointer transition-colors group relative`}
+                className={`border ${isDragActive ? 'border-neon-green bg-neon-green/5' : 'border-dark-border bg-[#121A15]'} border-dashed rounded-2xl p-6 md:p-10 flex flex-col items-center justify-center text-center hover:border-neon-green/50 cursor-pointer transition-colors group relative`}
               >
                 <input {...getInputProps()} />
 
-                <div className="w-14 h-14 bg-[#1C2A22] rounded-full flex items-center justify-center mb-6 group-hover:bg-neon-green/20 transition-colors">
+                <div className="w-14 h-14 bg-dark-border rounded-full flex items-center justify-center mb-6 group-hover:bg-neon-green/20 transition-colors">
                   <Upload className="w-6 h-6 text-neon-green" />
                 </div>
                 <h3 className="text-xl font-bold mb-2">
@@ -412,15 +436,15 @@ export default function Dashboard() {
               <>
                 {/* OR Divider */}
                 <div className="flex items-center gap-4 py-2">
-                  <div className="flex-1 h-px bg-[#1C2A22]"></div>
+                  <div className="flex-1 h-px bg-dark-border"></div>
                   <div className="text-xs font-bold text-gray-500 uppercase tracking-widest">OR</div>
-                  <div className="flex-1 h-px bg-[#1C2A22]"></div>
+                  <div className="flex-1 h-px bg-dark-border"></div>
                 </div>
 
                 {/* URL Input */}
                 <div>
                   <label className="block text-sm font-semibold mb-2 text-gray-300">Paste Audio URL</label>
-                  <div className="flex bg-[#121A15] border border-[#1C2A22] rounded-lg overflow-hidden focus-within:border-neon-green/50 transition-colors">
+                  <div className="flex bg-[#121A15] border border-dark-border rounded-lg overflow-hidden focus-within:border-neon-green/50 transition-colors">
                     <input
                       type="text"
                       value={urlInput}
@@ -432,7 +456,7 @@ export default function Dashboard() {
                     <button 
                       onClick={handleUrlAnalyze}
                       disabled={!urlInput.trim() || isAnalyzing}
-                      className="bg-[#1C2A22] px-4 flex items-center justify-center hover:bg-[#2A3F33] transition-colors disabled:opacity-50"
+                      className="bg-dark-border px-4 flex items-center justify-center hover:bg-[#2A3F33] transition-colors disabled:opacity-50"
                       title="Analyze URL"
                     >
                       <LinkIcon className="w-5 h-5 text-neon-green" />
@@ -457,14 +481,14 @@ export default function Dashboard() {
               <h2 className="text-xl font-bold">Analysis Verdict</h2>
               <button
                 onClick={() => { setIsAnalyzing(false); setCurrentResult(null); }}
-                className="bg-[#1C2A22] text-neon-green px-4 py-2 rounded-lg font-bold hover:bg-[#2A3F33] transition-colors border border-neon-green/20 text-sm flex items-center gap-2"
+                className="bg-dark-border text-neon-green px-4 py-2 rounded-lg font-bold hover:bg-[#2A3F33] transition-colors border border-neon-green/20 text-sm flex items-center gap-2"
               >
                 <Upload className="w-4 h-4" /> Scan Another File
               </button>
             </div>
 
             {isAnalyzing ? (
-              <div className="flex flex-col items-center justify-center py-20 border border-[#1C2A22] bg-[#121A15] rounded-2xl glass-panel">
+              <div className="flex flex-col items-center justify-center py-20 border border-dark-border bg-[#121A15] rounded-2xl glass-panel">
                 <Loader2 className="w-14 h-14 text-neon-green animate-spin mb-6" />
                 <h3 className="text-xl font-bold mb-2 text-neon-green">Analyzing Audio...</h3>
                 <p className="text-gray-400 text-sm">Running through deep neural networks</p>
@@ -472,7 +496,7 @@ export default function Dashboard() {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {/* Donut Chart */}
-                <div className="glass-panel p-6 flex flex-col items-center justify-center border-[#1C2A22]">
+                <div className="glass-panel p-6 flex flex-col items-center justify-center border-dark-border">
                   <div className="relative w-40 h-40 flex items-center justify-center mb-4">
                     <svg className="w-full h-full -rotate-90 transform" viewBox="0 0 100 100">
                       <circle cx="50" cy="50" r="45" fill="none" stroke="#1C2A22" strokeWidth="10" />
@@ -509,7 +533,7 @@ export default function Dashboard() {
                 </div>
 
                 {/* Detection Signals Breakdown */}
-                <div className="glass-panel p-6 md:col-span-2 border-[#1C2A22] space-y-6 flex flex-col justify-center">
+                <div className="glass-panel p-6 md:col-span-2 border-dark-border space-y-6 flex flex-col justify-center">
                   <h3 className="font-bold flex items-center gap-2 mb-2"><Activity className="w-4 h-4 text-neon-green" /> Detection Signals Breakdown</h3>
 
                   <div className="space-y-5">
@@ -525,7 +549,7 @@ export default function Dashboard() {
                             {signal.score}% Feature Score
                           </span>
                         </div>
-                        <div className="h-1.5 w-full bg-[#1A251D] rounded-full overflow-hidden">
+                        <div className="h-1.5 w-full bg-dark-surface-hover rounded-full overflow-hidden">
                           <div
                             className={`h-full ${getSignalColor(signal.score, signal.name)} transition-all duration-1000 ease-out rounded-full`}
                             style={{ width: `${signal.score}%` }}
@@ -542,8 +566,8 @@ export default function Dashboard() {
       </div>
 
       {/* Right Sidebar - Recent Results */}
-      <div className="w-full xl:w-80 glass-panel border-[#1C2A22] flex flex-col p-0 overflow-hidden shrink-0 h-fit">
-        <div className="p-6 border-b border-[#1C2A22] flex items-center justify-between">
+      <div className="w-full xl:w-80 glass-panel border-dark-border flex flex-col p-0 overflow-hidden shrink-0 h-fit">
+        <div className="p-6 border-b border-dark-border flex items-center justify-between">
           <h3 className="font-bold">Recent Results</h3>
           {recentResults.length > 0 && (
             <button
@@ -556,7 +580,7 @@ export default function Dashboard() {
           )}
         </div>
 
-        <div className="flex-1 flex flex-col gap-1 p-4 min-h-[200px]">
+        <div className="flex-1 flex flex-col gap-1 p-4 min-h-50">
           {recentResults.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center text-gray-500 px-4 py-8">
               <History className="w-8 h-8 mb-4 opacity-30" />
@@ -565,7 +589,7 @@ export default function Dashboard() {
             </div>
           ) : (
             recentResults.map((res, i) => (
-              <div key={i} className="bg-[#121A15] border border-[#1C2A22] rounded-xl p-4 flex items-start gap-4 hover:border-[#2A3F33] transition-colors cursor-pointer">
+              <div key={i} className="bg-[#121A15] border border-dark-border rounded-xl p-4 flex items-start gap-4 hover:border-[#2A3F33] transition-colors cursor-pointer">
                 <div className={`p-2 rounded-lg shrink-0 ${res.isFake ? 'bg-red-500/10' : res.status === 'UNCERTAIN' ? 'bg-amber-500/10' : 'bg-neon-green/10'}`}>
                   {res.isFake ? (
                     <AlertTriangle className="w-5 h-5 text-red-500" />
