@@ -20,14 +20,9 @@ detect_bp = Blueprint("detect", __name__)
 UPLOADS_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "uploads")
 
 def _get_client_ip():
-    # Hugging Face and other cloud providers use proxies. 
-    # The real IP is often in X-Forwarded-For.
-    forwarded_for = request.headers.get("X-Forwarded-For")
-    if forwarded_for:
-        # Take the first IP in the list (the original client IP)
-        return forwarded_for.split(",")[0].strip()
-    
-    # Fallback to remote_addr if header is missing
+    # Since we added ProxyFix middleware in app.py, 
+    # request.remote_addr will now correctly reflect the client's real IP 
+    # through Hugging Face's proxy.
     return request.remote_addr or "unknown"
 
 def _extract_guest_id(payload=None):

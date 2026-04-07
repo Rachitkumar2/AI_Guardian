@@ -3,6 +3,7 @@ from flask import Flask, send_from_directory, request, jsonify
 from flask_cors import CORS
 from werkzeug.exceptions import NotFound
 from dotenv import load_dotenv
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 # Import blueprints
 from auth.auth_routes import auth_bp
@@ -15,6 +16,10 @@ load_dotenv()
 
 # In production, we only provide API services (Frontend is on Vercel)
 app = Flask(__name__)
+
+# Hugging Face uses a proxy, so we must trust it to get the correct client IP.
+# x_for=1 tells the app to trust the first proxy in the chain.
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 
 # CORS with credentials support
 # Build origins list from env var + defaults for local dev
@@ -52,7 +57,8 @@ def home():
     return jsonify({
         "status": "online",
         "message": "AI Guardian API is running",
-        "version": "1.0.0",
+        "version": "1.0.1",
+        "detected_ip": request.remote_addr,
         "endpoints": ["/api/detect", "/auth/login", "/auth/signup"]
     })
 
