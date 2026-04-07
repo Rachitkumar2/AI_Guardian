@@ -13,8 +13,8 @@ from routes.security_routes import security_bp
 # Load environment variables
 load_dotenv()
 
-# In production, serve React build from ../frontend/build
-app = Flask(__name__, static_folder='../frontend/build', static_url_path='')
+# In production, we only provide API services (Frontend is on Vercel)
+app = Flask(__name__)
 
 # CORS with credentials support
 # Build origins list from env var + defaults for local dev
@@ -48,20 +48,18 @@ app.register_blueprint(security_bp)
 
 @app.route("/")
 def home():
-    """Serve React frontend"""
-    return send_from_directory(app.static_folder, 'index.html')
+    """API Health Check"""
+    return jsonify({
+        "status": "online",
+        "message": "AI Guardian API is running",
+        "version": "1.0.0",
+        "endpoints": ["/api/detect", "/auth/login", "/auth/signup"]
+    })
 
-# Catch-all route to serve React app for client-side routing
+# Catch-all route for 404s
 @app.errorhandler(404)
 def not_found(e):
-    # Return JSON 404 for API and auth routes
-    if request.path.startswith("/api/") or request.path.startswith("/auth/"):
-        return jsonify({"error": "not_found", "message": "API endpoint not found"}), 404
-    # Try to serve index.html for client-side routing, fallback to JSON 404
-    try:
-        return send_from_directory(app.static_folder, 'index.html')
-    except (NotFound, TypeError):
-        return jsonify({"error": "not_found", "message": "Resource not found"}), 404
+    return jsonify({"error": "not_found", "message": "API endpoint not found"}), 404
 
 
 if __name__ == "__main__":
