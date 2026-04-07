@@ -1,7 +1,11 @@
+import { useState, useMemo } from 'react';
 import { Search, ArrowRight } from 'lucide-react';
 
 export default function Library() {
-  const topics = ['All Topics', 'Basics', 'Scam Prevention', 'Detection Tech', 'Case Studies', 'Legal Framework'];
+  const [activeTopic, setActiveTopic] = useState('All Topics');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const topics = ['All Topics', 'Basics', 'Scam Prevention', 'Detection Tech', 'Case Studies', 'Safety Tips', 'Legal Framework'];
   
   const articles = [
     {
@@ -42,6 +46,31 @@ export default function Library() {
     }
   ];
 
+  const filteredArticles = useMemo(() => {
+    return articles.filter(article => {
+      // Topic filtering
+      const categoryMap = {
+        'Basics': 'BASICS',
+        'Scam Prevention': 'SCAM PREVENTION',
+        'Detection Tech': 'TECHNOLOGY',
+        'Case Studies': 'CASE STUDIES',
+        'Safety Tips': 'PROTECTION',
+        'Legal Framework': 'LEGAL'
+      };
+
+      const matchesTopic = activeTopic === 'All Topics' || article.category === categoryMap[activeTopic];
+      
+      // Search filtering
+      const searchStr = searchQuery.toLowerCase();
+      const matchesSearch = !searchQuery || 
+        article.title.toLowerCase().includes(searchStr) ||
+        article.description.toLowerCase().includes(searchStr) ||
+        article.category.toLowerCase().includes(searchStr);
+
+      return matchesTopic && matchesSearch;
+    });
+  }, [activeTopic, searchQuery]);
+
   return (
     <div className="w-full">
       {/* Header Section */}
@@ -60,6 +89,8 @@ export default function Library() {
           </div>
           <input
             type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full bg-[#151E18] border border-[#1C2A22] text-white rounded-xl pl-12 pr-4 py-4 focus:outline-none focus:border-neon-green/50 transition-colors"
             placeholder="Search articles, guides, or technology terms..."
           />
@@ -67,13 +98,14 @@ export default function Library() {
 
         {/* Filters */}
         <div className="flex flex-wrap gap-3 mb-16">
-          {topics.map((topic, index) => (
+          {topics.map((topic) => (
             <button
               key={topic}
-              className={`px-5 py-2 rounded-full text-sm font-medium transition-colors ${
-                index === 0
-                  ? 'bg-neon-green text-black'
-                  : 'bg-[#151E18] text-gray-300 hover:bg-[#1C2A22] border border-[#1C2A22]'
+              onClick={() => setActiveTopic(topic)}
+              className={`px-5 py-2 rounded-full text-sm font-medium transition-all duration-200 border cursor-pointer ${
+                activeTopic === topic
+                  ? 'bg-neon-green text-black border-neon-green shadow-[0_0_15px_rgba(5,255,0,0.3)]'
+                  : 'bg-[#151E18] text-gray-400 hover:text-white hover:bg-[#1C2A22] border-[#1C2A22]'
               }`}
             >
               {topic}
@@ -82,38 +114,53 @@ export default function Library() {
         </div>
 
         {/* Grid of Articles */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {articles.map((article, idx) => (
-            <div key={idx} className="glass-panel overflow-hidden group hover:border-dark-border/80 transition-all flex flex-col">
-              {/* Cover Image */}
-              <div className="h-48 w-full relative overflow-hidden bg-[#0E1511]">
-                <img 
-                  src={article.image} 
-                  alt={article.title} 
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#0E1511] via-[#0E1511]/40 to-transparent opacity-80 group-hover:opacity-60 transition-opacity"></div>
-              </div>
-              
-              <div className="p-8 flex-1 flex flex-col">
-                <div className="text-[10px] font-bold text-neon-green tracking-wider uppercase mb-3 text-shadow-sm">
-                  {article.category}
+        {filteredArticles.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {filteredArticles.map((article, idx) => (
+              <div key={idx} className="glass-panel overflow-hidden group hover:border-dark-border/80 transition-all flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-500">
+                {/* Cover Image */}
+                <div className="h-48 w-full relative overflow-hidden bg-[#0E1511]">
+                  <img 
+                    src={article.image} 
+                    alt={article.title} 
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#0E1511] via-[#0E1511]/40 to-transparent opacity-80 group-hover:opacity-60 transition-opacity"></div>
                 </div>
-                <h3 className="text-xl font-bold mb-3 text-white group-hover:text-neon-green transition-colors">
-                  {article.title}
-                </h3>
-                <p className="text-gray-400 text-sm leading-relaxed mb-6 flex-1">
-                  {article.description}
-                </p>
-                <button className="flex items-center gap-2 text-neon-green text-sm font-bold group/btn self-start">
-                  Read Article <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
-                </button>
+                
+                <div className="p-8 flex-1 flex flex-col">
+                  <div className="text-[10px] font-bold text-neon-green tracking-wider uppercase mb-3 text-shadow-sm">
+                    {article.category}
+                  </div>
+                  <h3 className="text-xl font-bold mb-3 text-white group-hover:text-neon-green transition-colors">
+                    {article.title}
+                  </h3>
+                  <p className="text-gray-400 text-sm leading-relaxed mb-6 flex-1">
+                    {article.description}
+                  </p>
+                  <button className="flex items-center gap-2 text-neon-green text-sm font-bold group/btn self-start hover:gap-3 transition-all">
+                    Read Article <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-20 bg-[#151E18]/30 rounded-2xl border border-dashed border-[#1C2A22]">
+            <Search className="w-12 h-12 text-gray-600 mx-auto mb-4 opacity-50" />
+            <h3 className="text-xl font-bold text-white mb-2">No articles found</h3>
+            <p className="text-gray-400">Try adjusting your search or filters to find what you're looking for.</p>
+            <button 
+              onClick={() => {setActiveTopic('All Topics'); setSearchQuery('');}}
+              className="mt-6 text-neon-green font-bold hover:underline"
+            >
+              Clear all filters
+            </button>
+          </div>
+        )}
       </section>
 
     </div>
   );
 }
+
