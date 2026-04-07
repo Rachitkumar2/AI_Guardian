@@ -11,37 +11,43 @@ def _normalize_user_id(user_id):
     return str(user_id)
 
 
-def _build_guest_selector(guest_id=None, guest_ip=None):
-    # Prefer stable guest_id identity and only use IP as a fallback.
+def _build_guest_query(guest_id=None, guest_ip=None):
+    """Build a query that matches either the guest_id or guest_ip."""
+    clauses = []
     if guest_id:
-        return {"guest_id": guest_id}
+        clauses.append({"guest_id": guest_id})
     if guest_ip:
-        return {"guest_ip": guest_ip}
-    return None
-
-
-def _build_selector(guest_id=None, user_id=None, guest_ip=None):
-    if user_id:
-        return {"user_id": _normalize_user_id(user_id)}
-    return _build_guest_selector(guest_id=guest_id, guest_ip=guest_ip)
+        clauses.append({"guest_ip": guest_ip})
+    
+    if not clauses:
+        return None
+    return {"$or": clauses}
 
 
 def _fetch_usage(guest_id=None, user_id=None, guest_ip=None):
-    selector = _build_selector(guest_id=guest_id, user_id=user_id, guest_ip=guest_ip)
-    if not selector:
+    if user_id:
+        return usage_collection.find_one({"user_id": _normalize_user_id(user_id)})
+    
+    query = _build_guest_query(guest_id=guest_id, guest_ip=guest_ip)
+    if not query:
         return None
-    return usage_collection.find_one(selector)
+    
+    # We sort by scans_used descending to find the most restrictive record
+    # (e.g. if one browser ID has 2 scans and another has 0, we take the 2).
+    return usage_collection.find_one(query, sort=[("scans_used", -1)])
 
 
 def allowed_to_scan(guest_id=None, user_id=None, guest_ip=None):
     normalized_user_id = _normalize_user_id(user_id)
     if normalized_user_id:
+        # Authenticated users have their own limits/logic (currently unlimited in this code)
+        record = _fetch_usage(user_id=normalized_user_id)
         return {
             "allowed": True,
             "limit": None,
-            "scans_used": None,
+            "scans_used": int(record.get("scans_used", 0)) if record else 0,
             "scans_remaining": None,
-            "record": _fetch_usage(user_id=normalized_user_id),
+            "record": record,
         }
 
     record = _fetch_usage(guest_id=guest_id, guest_ip=guest_ip)
@@ -59,12 +65,15 @@ def allowed_to_scan(guest_id=None, user_id=None, guest_ip=None):
 
 def increment_usage(guest_id=None, user_id=None, guest_ip=None):
     normalized_user_id = _normalize_user_id(user_id)
+    
+    # 1. Determine the primary identity for this update
     if normalized_user_id:
         selector = {"user_id": normalized_user_id}
+    elif guest_id:
+        selector = {"guest_id": guest_id}
+    elif guest_ip:
+        selector = {"guest_ip": guest_ip}
     else:
-        selector = _build_guest_selector(guest_id=guest_id, guest_ip=guest_ip)
-
-    if not selector:
         return None
 
     now = datetime.utcnow()
@@ -74,6 +83,7 @@ def increment_usage(guest_id=None, user_id=None, guest_ip=None):
         "$setOnInsert": {"created_at": now},
     }
 
+    # 2. Store all available identifiers in the record for future cross-referencing
     if normalized_user_id:
         update_doc["$set"]["user_id"] = normalized_user_id
     if guest_id:
@@ -81,10 +91,7 @@ def increment_usage(guest_id=None, user_id=None, guest_ip=None):
     if guest_ip:
         update_doc["$set"]["guest_ip"] = guest_ip
 
-    existing_record = _fetch_usage(guest_id=guest_id, guest_ip=guest_ip, user_id=normalized_user_id)
-    if existing_record:
-        return usage_collection.update_one({"_id": existing_record["_id"]}, update_doc)
-
+    # 3. Perform the update (upsert if no record exists for this specific selector)
     return usage_collection.update_one(selector, update_doc, upsert=True)
 
 

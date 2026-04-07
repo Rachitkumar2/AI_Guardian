@@ -20,11 +20,14 @@ detect_bp = Blueprint("detect", __name__)
 UPLOADS_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "uploads")
 
 def _get_client_ip():
-    trust_proxy_headers = os.environ.get("TRUST_PROXY_HEADERS", "0") == "1"
+    # Hugging Face and other cloud providers use proxies. 
+    # The real IP is often in X-Forwarded-For.
     forwarded_for = request.headers.get("X-Forwarded-For")
-    if trust_proxy_headers and forwarded_for:
-        # Only trust proxy headers when explicitly enabled by environment.
+    if forwarded_for:
+        # Take the first IP in the list (the original client IP)
         return forwarded_for.split(",")[0].strip()
+    
+    # Fallback to remote_addr if header is missing
     return request.remote_addr or "unknown"
 
 def _extract_guest_id(payload=None):
