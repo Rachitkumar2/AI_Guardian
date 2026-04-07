@@ -139,15 +139,15 @@ export default function Dashboard() {
   };
 
   const handleFileUpload = async (file) => {
+    // Check limit first to avoid flickering "Analyzing" state for blocked users
+    if (!isAuthenticated && guestScansUsed >= MAX_FREE_SCANS) {
+      setUploadError('You have reached your limit of 2 free scans. Please log in to continue.');
+      return;
+    }
+
     setIsAnalyzing(true);
     setCurrentResult(null);
     setUploadError('');
-
-    if (!isAuthenticated && guestScansUsed >= MAX_FREE_SCANS) {
-      setUploadError('You have reached your limit of 2 free scans. Please log in to continue.');
-      setIsAnalyzing(false);
-      return;
-    }
 
     const formData = new FormData();
     formData.append('file', file);
@@ -244,15 +244,15 @@ export default function Dashboard() {
   const handleUrlAnalyze = async () => {
     if (!urlInput.trim()) return;
 
+    // Check limit first to avoid flickering "Analyzing" state for blocked users
+    if (!isAuthenticated && guestScansUsed >= MAX_FREE_SCANS) {
+      setUploadError('You have reached your limit of 2 free scans. Please log in to continue.');
+      return;
+    }
+
     setIsAnalyzing(true);
     setCurrentResult(null);
     setUploadError('');
-
-    if (!isAuthenticated && guestScansUsed >= MAX_FREE_SCANS) {
-      setUploadError('You have reached your limit of 2 free scans. Please log in to continue.');
-      setIsAnalyzing(false);
-      return;
-    }
 
     try {
       const headers = {
