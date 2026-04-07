@@ -1,6 +1,26 @@
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Radio, Database, Terminal, Fingerprint, Search, ArrowRight, History, Settings, Activity } from 'lucide-react';
 
 export default function Tools() {
+  const navigate = useNavigate();
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const handleAuthChange = () => {
+      const stored = localStorage.getItem('user');
+      if (stored) {
+        try { setUser(JSON.parse(stored)); } catch { setUser(null); }
+      } else {
+        setUser(null);
+      }
+    };
+
+    handleAuthChange();
+    window.addEventListener('authChange', handleAuthChange);
+    return () => window.removeEventListener('authChange', handleAuthChange);
+  }, []);
+
   const toolsList = [
     {
       title: 'Real-time Stream Monitor',
@@ -104,14 +124,22 @@ export default function Tools() {
             </div>
           </div>
           
-          <div className="flex items-center gap-3">
-            <button className="flex items-center gap-2 bg-[#1C2A22] hover:bg-[#2A3F33] text-gray-300 px-4 py-2 rounded-lg text-sm transition-colors border border-[#1C2A22]">
-              <History className="w-4 h-4 text-neon-green" /> History
-            </button>
-            <button className="flex items-center gap-2 bg-[#1C2A22] hover:bg-[#2A3F33] text-gray-300 px-4 py-2 rounded-lg text-sm transition-colors border border-[#1C2A22]">
-              <Settings className="w-4 h-4 text-neon-green" /> Settings
-            </button>
-          </div>
+          {user && (
+            <div className="flex items-center gap-3">
+              <button 
+                onClick={() => navigate('/app/history')}
+                className="flex items-center gap-2 bg-[#1C2A22] hover:bg-[#2A3F33] text-gray-300 px-4 py-2 rounded-lg text-sm transition-colors border border-[#1C2A22] cursor-pointer"
+              >
+                <History className="w-4 h-4 text-neon-green" /> History
+              </button>
+              <button 
+                onClick={() => navigate('/settings/profile')}
+                className="flex items-center gap-2 bg-[#1C2A22] hover:bg-[#2A3F33] text-gray-300 px-4 py-2 rounded-lg text-sm transition-colors border border-[#1C2A22] cursor-pointer"
+              >
+                <Settings className="w-4 h-4 text-neon-green" /> Settings
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
